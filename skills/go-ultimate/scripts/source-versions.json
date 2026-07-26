@@ -1,0 +1,69 @@
+{
+  "_comment": "Baseline pins for go-ultimate's donor sources. Used by scripts/check-source-versions.sh to detect upstream drift. Update a pin whenever you fold a change from that donor back into the skill (and bump SKILL.md version). Pin types: commit_sha = last commit touching a GitHub path; tag = latest stable release/tag; content_sha256 = sha256 of the HTTP body.",
+  "_updated": "2026-07-26",
+  "sources": {
+    "teetsh-review": {
+      "kind": "github-path",
+      "repo": "teetsh-org/claude-skills",
+      "path": "code-review/skills/golang-code-review/SKILL.md",
+      "commit_sha": "1de671898f79",
+      "doc_ref": "references/code-review.md"
+    },
+    "jetbrains-modern-go": {
+      "kind": "github-path",
+      "repo": "JetBrains/go-modern-guidelines",
+      "path": "claude/modern-go-guidelines/skills/use-modern-go/SKILL.md",
+      "commit_sha": "3a7f3eecd29f",
+      "doc_ref": "references/modern-go.md"
+    },
+    "powerman-bch": {
+      "kind": "github-path",
+      "repo": "powerman/skills",
+      "path": "go-bounded-context-hexagonal/SKILL.md",
+      "version": "0.6.0",
+      "commit_sha": "6b1eb5d658a7",
+      "doc_ref": "references/architecture.md"
+    },
+    "powerman-engpol": {
+      "kind": "github-path",
+      "repo": "powerman/skills",
+      "path": "go-engineering-policy/SKILL.md",
+      "version": "0.0.5",
+      "commit_sha": "ffff76e2b739",
+      "doc_ref": "references/engineering-policy.md"
+    },
+    "eino": {
+      "kind": "github-tag",
+      "repo": "cloudwego/eino",
+      "_note": "Design docs live off-repo on cloudwego.io. Pinned to the latest main-branch SHA at baseline; ADK/orchestration pattern drift detected via tag/release changes. 'adk-0.1' is an in-repo package, not a recoverable tag.",
+      "tag": "v0.9.13",
+      "commit_sha": "ca0441ac0bce",
+      "doc_ref": "references/agents.md"
+    },
+    "go-sdk": {
+      "kind": "github-tag",
+      "repo": "modelcontextprotocol/go-sdk",
+      "tag": "v1.6.1",
+      "_note": "v1.7.0-pre.x targets the not-yet-final 2026-07-28 MCP protocol and is additive only; the stable API the skill teaches is unchanged at HEAD.",
+      "doc_ref": "references/mcp-server.md, assets/mcp-server/"
+    },
+    "philschmid-mcp-best-practices": {
+      "kind": "website",
+      "url": "https://www.philschmid.de/mcp-best-practices",
+      "content_sha256": "525a6d85fe1537f8b32456b71cf8f319dfbb1994078241dfaa138ea631b34452",
+      "_note": "Published 2026-01-21 per Open Graph metadata; no update marker.",
+      "doc_ref": "references/mcp-server.md"
+    },
+    "modelcontextprotocol-info-best-practices": {
+      "kind": "website",
+      "url": "https://modelcontextprotocol.info/docs/best-practices/",
+      "content_sha256": "89e442cfef95e8147bd1ffeb921e595f906149ad085ff8dccb7c88c81bfc65ba",
+      "_note": "Page is undated. Content hashes are noisy (ads, dynamic chrome) — treat as a coarse signal and eyeball-diff on mismatch.",
+      "doc_ref": "references/mcp-server.md"
+    }
+  },
+  "no_longer_tracked": {
+    "danicat-best-practices": "Deleted upstream 2026-07-21 (commit 201fa420). Content folded into references/engineering-policy.md + references/code-review.md.",
+    "danicat-project-setup": "Deleted upstream 2026-07-21 (commit 201fa420). Boilerplates now owned by this skill under assets/."
+  }
+}

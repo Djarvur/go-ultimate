@@ -1,0 +1,159 @@
+# Modern Go — Version-Gated Syntax
+
+**Source:** condensed from [JetBrains `use-modern-go`](https://github.com/JetBrains/go-modern-guidelines/blob/main/claude/modern-go-guidelines/skills/use-modern-go/SKILL.md).
+
+## Detecting the target version
+
+Run the bundled detector, passing the target project's path as an argument:
+
+```
+go run <skill-dir>/scripts/goversion/main.go <project-path>
+```
+
+where `<skill-dir>` is the absolute path to the installed `go-ultimate` skill
+(e.g. `~/.zcode/skills/go-ultimate`). The detector prints the bare `go`
+directive value (e.g. `1.24.3`, **no** `go ` prefix) and exits 0. When no
+`go.mod` is found or it has no `go` directive, it falls back to the Go runtime
+version (the version the detector binary was compiled with) instead of failing —
+so there is always a version on stdout.
+
+Use ALL features up to and including the detected `go` version. Never use
+features from a newer Go than the target. Never use an outdated pattern when a
+modern alternative exists in the target version.
+
+State the version once: *"This project is using Go X.XX, so I'll use features up
+to and including this version."* Then proceed — do not list features or ask for
+confirmation on each one.
+
+> Why run from the skill directory rather than the target project? `go run
+> <abs-path>` from inside another module fails with "directory … outside main
+> module". The detector is a stdlib-only single file, so you can also copy the
+> `main.go` into the target project and run it there if you prefer.
+
+## Contents
+
+- [Detecting the target version](#detecting-the-target-version)
+- [Catalog by version (use the highest applicable)](#catalog-by-version-use-the-highest-applicable)
+- [Source](#source)
+
+---
+
+## Catalog by version (use the highest applicable)
+
+### Go 1.13+
+- `errors.Is(err, target)` instead of `err == target` (works with wrapped errors).
+
+### Go 1.18+
+- `any` instead of `interface{}`.
+- `strings.Cut` / `bytes.Cut` instead of `Index` + slice.
+
+### Go 1.19+
+- `atomic.Bool` / `atomic.Int64` / `atomic.Pointer[T]` instead of `atomic.StoreInt32` etc.
+- `fmt.Appendf(buf, ...)` instead of `[]byte(fmt.Sprintf(...))`.
+
+```go
+// Type-safe atomics replace error-prone atomic.Store*/Load* APIs.
+var flag atomic.Bool
+flag.Store(true)
+if flag.Load() { /* ... */ }
+
+var ptr atomic.Pointer[Config]
+ptr.Store(cfg)
+```
+
+### Go 1.20+
+- `strings.Clone` / `bytes.Clone` to copy without sharing memory.
+- `strings.CutPrefix` / `strings.CutSuffix`.
+- `errors.Join(err1, err2)` to combine multiple errors.
+- `context.WithCancelCause` / `context.Cause` to get the error that caused cancellation.
+
+### Go 1.21+
+**Built-ins:** `min` / `max` / `clear`.
+**`slices` package:** `Contains`, `Index`, `IndexFunc`, `Sort`, `SortFunc`, `Min`, `Max`, `Reverse`, `Compact`, `Clip`, `Clone`.
+**`maps` package:** `Clone`, `Copy`, `DeleteFunc`.
+**`sync`:** `sync.OnceFunc`, `sync.OnceValue` instead of `sync.Once` + wrapper.
+**`context`:** `AfterFunc`, `WithTimeoutCause`, `WithDeadlineCause`.
+
+### Go 1.22+
+- `for i := range n` and `for i := range len(items)` instead of `for i := 0; i < len(items); i++`.
+- Loop variables are safe to capture in goroutines (each iteration gets its own copy).
+- `cmp.Or(flag, env, config, "default")` — first non-zero value.
+- `reflect.TypeFor[T]()`.
+- Enhanced `http.ServeMux` patterns: `mux.HandleFunc("GET /api/{id}", h)` + `r.PathValue("id")`.
+
+```go
+// cmp.Or replaces the classic if-else chain for "first non-zero value".
+name := cmp.Or(os.Getenv("NAME"), "default")
+```
+
+### Go 1.23+
+- `maps.Keys(m)` / `maps.Values(m)` return iterators.
+- `slices.Collect(iter)` / `slices.Sorted(iter)` to materialize iterators.
+- `time.Tick` is safe to use freely (GC now reclaims unreferenced tickers;
+  `Stop` is no longer needed to help the GC, so there is no longer any reason
+  to prefer `NewTicker` when `Tick` will do).
+
+```go
+// Three idioms for working with map iterators.
+keys := slices.Collect(maps.Keys(m))       // not: for k := range m { keys = append(keys, k) }
+sortedKeys := slices.Sorted(maps.Keys(m))  // collect + sort in one step
+for k := range maps.Keys(m) { process(k) } // iterate directly, no allocation
+```
+
+### Go 1.24+
+**ALWAYS** apply these:
+- `t.Context()` instead of `context.WithCancel(context.Background())` in tests.
+- `omitzero` (not `omitempty`) for `time.Duration`, `time.Time`, structs, slices, maps in JSON tags.
+- `b.Loop()` (not `for i := 0; i < b.N; i++`) in benchmarks.
+- `strings.SplitSeq` / `strings.FieldsSeq` / `bytes.SplitSeq` / `bytes.FieldsSeq` when iterating split results in a for-range.
+
+```go
+// 1.24+ benchmark
+func BenchmarkFoo(b *testing.B) {
+    for b.Loop() {
+        doWork()
+    }
+}
+
+// 1.24+ JSON
+type Config struct {
+    Timeout time.Duration `json:"timeout,omitzero"`
+}
+```
+
+### Go 1.25+
+**ALWAYS** use `wg.Go(fn)` instead of `wg.Add(1)` + `go func(){ defer wg.Done(); ... }()`.
+
+```go
+var wg sync.WaitGroup
+for _, item := range items {
+    wg.Go(func() {
+        process(item)
+    })
+}
+wg.Wait()
+```
+
+### Go 1.26+
+- `new(val)` returns a pointer to any value: `new(30)` → `*int`, `new(true)` → `*bool`, `new(T{})` → `*T`.
+  Do **not** use the `x := val; &x` pattern. Do **not** write redundant casts like `new(int(0))`.
+- `errors.AsType[T](err)` instead of `errors.As(err, &target)`.
+
+```go
+// 1.26+
+cfg := Config{
+    Timeout: new(30),
+    Debug:   new(true),
+}
+if pathErr, ok := errors.AsType[*os.PathError](err); ok {
+    handle(pathErr)
+}
+```
+
+---
+
+## Source
+
+This reference condenses the JetBrains `use-modern-go` SKILL.md. The full
+per-version catalog with extensive before/after examples lives upstream:
+https://github.com/JetBrains/go-modern-guidelines/blob/main/claude/modern-go-guidelines/skills/use-modern-go/SKILL.md

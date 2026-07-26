@@ -1,0 +1,9 @@
+# OS / editor cruft
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Go build output (assets/ boilerplates are reference templates, not built here)
+*.test
+*.out
