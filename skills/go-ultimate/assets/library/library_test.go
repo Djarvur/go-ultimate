@@ -21,7 +21,7 @@ func TestHello(t *testing.T) {
 		{name: "empty", in: "", want: "Hello, !"},
 	}
 	for _, tc := range cases {
-		tc := tc
+		// No `tc := tc` — since Go 1.22 each iteration gets its own copy.
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			if got := library.Hello(tc.in); got != tc.want {
