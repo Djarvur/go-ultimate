@@ -40,8 +40,11 @@ fi
 github_path_sha() {
     local repo="$1" path="$2"
     local sha
+    # `// empty` matters: on an empty array (path deleted, repo renamed, file
+    # moved) jq would otherwise print the string "null", which passes the -z
+    # test below and gets reported as DRIFT instead of FETCH ERROR.
     sha=$(gh api "repos/${repo}/commits?path=${path}&per_page=1" \
-            --jq '.[0].sha' 2>/dev/null || true)
+            --jq '.[0].sha // empty' 2>/dev/null || true)
     if [[ -z "$sha" ]]; then
         echo "FETCH_ERROR"
     else
@@ -54,10 +57,10 @@ github_path_sha() {
 github_latest_tag() {
     local repo="$1" tag
     # Prefer latest published release.
-    tag=$(gh api "repos/${repo}/releases/latest" --jq '.tag_name' 2>/dev/null || true)
+    tag=$(gh api "repos/${repo}/releases/latest" --jq '.tag_name // empty' 2>/dev/null || true)
     if [[ -z "$tag" ]]; then
         # Fall back to most recently pushed tag.
-        tag=$(gh api "repos/${repo}/tags?per_page=1" --jq '.[0].name' 2>/dev/null || true)
+        tag=$(gh api "repos/${repo}/tags?per_page=1" --jq '.[0].name // empty' 2>/dev/null || true)
     fi
     if [[ -z "$tag" ]]; then
         echo "FETCH_ERROR"
