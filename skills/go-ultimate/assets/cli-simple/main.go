@@ -8,6 +8,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"os/signal"
 	"syscall"
@@ -30,7 +31,7 @@ func main() {
 // run holds all testable logic. It takes ctx (for cancellation), the parsed
 // inputs, and an io.Writer (so tests can capture output without os.Stdout).
 // No flag parsing, no os.Exit — main owns those.
-func run(ctx context.Context, name string, stdout *os.File) error {
+func run(ctx context.Context, name string, stdout io.Writer) error {
 	select {
 	case <-ctx.Done():
 		return ctx.Err()

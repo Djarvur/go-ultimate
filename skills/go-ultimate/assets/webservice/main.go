@@ -21,29 +21,34 @@ import (
 	"syscall"
 	"time"
 
+	inhttp "example.com/webservice/internal/in/http"
 	"example.com/webservice/internal/port"
-	"example.com/webservice/internal/in/http"
 )
 
 func main() {
-	if err := run(); err != nil {
+	// Long-lived base context, cancelled by SIGINT/SIGTERM. main owns signals.
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	if err := run(ctx); err != nil {
 		fmt.Fprintf(os.Stderr, "webservice: %v\n", err)
 		os.Exit(1)
 	}
 }
 
-func run() error {
-	// Long-lived base context, cancelled by SIGINT/SIGTERM.
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
-
-	// In a real service cfg would come from flags/env and be Resolve()d here.
-	app := port.App(nil) // wire builds the real app; this is a template
+// run holds everything testable. A real service takes a resolved business Config
+// as its second parameter — run(ctx, cfg) error — and passes it to Wire.
+func run(ctx context.Context) error {
+	var app port.App // nil here: Wire builds the real one. See wire.go.
 	rt, err := Wire(ctx, app)
 	if err != nil {
 		return fmt.Errorf("wire: %w", err)
 	}
-	defer rt.Close()
+	defer func() {
+		if err := rt.Close(); err != nil {
+			slog.Error("releasing runtime resources", "err", err)
+		}
+	}()
 
 	addr := net.JoinHostPort("localhost", "8080")
 	httpServer := &http.Server{

@@ -41,7 +41,10 @@ is a minimal, runnable skeleton matching the layout the skill mandates.
 - `package main` is **thin**: signal handling + `os.Exit` only. All testable logic
   lives in a `run(ctx, ...) error` function. (See
   [engineering-policy.md § `package main`](../references/engineering-policy.md).)
-- Graceful shutdown via `signal.NotifyContext` for `os.Interrupt`/`SIGTERM`.
+- Graceful shutdown via `signal.NotifyContext` for `os.Interrupt`/`SIGTERM` in every
+  template that owns its own run loop (`cli-simple`, `cli-cobra`, `webservice`,
+  `mcp-server`). `game/` is the exception: Ebitengine owns the loop and exits via
+  `Update() error`.
 - No `pkg/` directory. Private code under `internal/`; multiple binaries under `cmd/`.
 - Layouts follow [project-layouts.md](../references/project-layouts.md).
 

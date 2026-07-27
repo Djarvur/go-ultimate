@@ -58,7 +58,6 @@ func TestDoThing(t *testing.T) {
         {name: "too big", input: "!!!", wantErr: app.ErrTooBig},
     }
     for _, tt := range tests {
-        tt := tt
         t.Run(tt.name, func(t *testing.T) {
             t.Parallel()
             err := app.DoThing(tt.input)
@@ -81,7 +80,7 @@ func TestDoThing(t *testing.T) {
 - **`go.uber.org/mock/mockgen` (gomock)** by default — for interaction-based
   tests where assertions are about exact calls, arguments, call counts,
   matchers, or ordering.
-- **`github.com/unknwon/go-mockgen`** for stateful fakes — when tests read better
+- **`github.com/derision-test/go-mockgen`** for stateful fakes — when tests read better
   as world-state transitions than as long `EXPECT()` chains, especially when a
   dependency needs default behavior plus queued per-call overrides and optional
   post-hoc inspection of call history. List interface names explicitly with

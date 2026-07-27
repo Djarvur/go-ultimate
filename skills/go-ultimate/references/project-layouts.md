@@ -102,18 +102,41 @@ cli-simple/
 └── *.go                        Other commands / helpers in package main.
 ```
 
-### Multi-command CLI: `cmd/` + flat internal
+### Multi-command CLI (one binary, several subcommands): `cmd/` + `internal/`
+
+One binary at the root; `cmd/` is a **package of subcommand constructors**, not a
+directory of binaries. Matches [`../assets/cli-cobra/`](../assets/cli-cobra/).
 
 ```text
 cli-multi/
 ├── go.mod
+├── main.go                     Thin: calls cmd.Execute().
 ├── cmd/
-│   ├── root/main.go            cmd root - dispatches to subcommands.
-│   ├── add/main.go
-│   └── remove/main.go
+│   ├── root.go                 newRootCmd(); owns global flags, adds subcommands.
+│   ├── add.go                  newAddCmd()
+│   └── remove.go               newRemoveCmd()
 └── internal/
     ├── config/config.go
     └── store/store.go
+```
+
+Build commands with factory functions (`newRootCmd`, `newAddCmd`, …) rather than
+package-level vars, so no hidden global state leaks between tests or invocations.
+
+### Multiple binaries: `cmd/<app-name>/main.go`
+
+Only when the repo genuinely ships more than one executable — a different rule
+from the one above, and the one [engineering-policy.md](engineering-policy.md)
+§ `package main` refers to.
+
+```text
+tools/
+├── go.mod
+├── cmd/
+│   ├── importer/main.go        Binary 1.
+│   └── reporter/main.go        Binary 2.
+└── internal/
+    └── store/store.go          Shared private code.
 ```
 
 ### The `run(ctx, cfg) error` pattern (mandatory)
@@ -124,6 +147,7 @@ package main
 
 import (
     "context"
+    "fmt"
     "os"
     "os/signal"
     "syscall"
@@ -135,6 +159,7 @@ func main() {
 
     cfg := parseFlags()
     if err := run(ctx, cfg); err != nil {
+        fmt.Fprintf(os.Stderr, "my-tool: %v\n", err)
         os.Exit(1)
     }
 }

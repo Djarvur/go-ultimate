@@ -11,13 +11,22 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/spf13/cobra"
 )
 
 // Execute runs the root command. It is the only entry point main calls.
+//
+// The command tree runs on a context cancelled by SIGINT/SIGTERM, so every
+// RunE can honour cancellation via cmd.Context().
 func Execute() error {
-	return newRootCmd().ExecuteContext(context.Background())
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	return newRootCmd().ExecuteContext(ctx)
 }
 
 // newRootCmd builds and returns the root command. Add subcommands by calling

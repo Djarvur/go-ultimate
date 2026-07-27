@@ -12,11 +12,15 @@ import (
 )
 
 // New constructs the App. Real wiring goes in wire.go (parent dir).
-func New() port.App {
+//
+// It returns *App, not port.App: "accept interfaces, return structs" (SKILL.md
+// principle 7). Callers store it in a port.App field — see wire.go.
+func New() *App {
 	return &App{}
 }
 
-// App implements port.App. Keep the struct unexported; expose only the interface.
+// App implements port.App. Callers depend on the port.App interface, never on
+// this type directly.
 type App struct {
 	// Owned resources (DB pool, clients) would live here as private fields.
 }

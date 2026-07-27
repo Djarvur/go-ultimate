@@ -6,7 +6,6 @@
 package inhttp
 
 import (
-	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -50,7 +49,3 @@ func logging(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
-
-// _ ensures context is imported even when no handler yet uses r.Context()
-// directly (template scaffolding only — remove once handlers consume ctx).
-var _ = context.Background

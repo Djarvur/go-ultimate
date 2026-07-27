@@ -12,7 +12,7 @@ The skill lives under [`skills/go-ultimate/`](skills/go-ultimate/) and is struct
 |---|---|
 | `skills/go-ultimate/SKILL.md` | The skill itself — when it applies, the non-negotiable principles, the project-type decision tree, conflict precedence. |
 | `skills/go-ultimate/references/` | Deep dives loaded on demand: `architecture.md`, `engineering-policy.md`, `modern-go.md`, `testing.md`, `code-review.md`, `libraries.md`, `project-layouts.md`, `wiring-and-runtime.md`, `modular-monolith.md`, `mcp-server.md`, `agents.md`. |
-| `skills/go-ultimate/assets/` | Scaffolded project templates per type: `cli-simple`, `cli-cobra`, `library`, `game`, `mcp-server`, `webservice` (all build green with Go 1.26.x). |
+| `skills/go-ultimate/assets/` | Scaffolded project templates per type: `cli-simple`, `cli-cobra`, `library`, `game`, `mcp-server`, `webservice` (all `build`, `vet` and `test -race` green). |
 | `skills/go-ultimate/scripts/` | `goversion/main.go` (detects the project's `go.mod` version) and `check-source-versions.sh` + `source-versions.json` (drift checker for upstream donor sources). |
 | `skills/go-ultimate/evals/` | Example prompts and expected behaviors for catching skill drift. |
 
@@ -54,7 +54,7 @@ The skill synthesizes nine upstream sources. Full attribution and the live pins 
 
 **General Go:** `teetsh-org/claude-skills#golang-code-review`, `JetBrains/go-modern-guidelines#use-modern-go`, `powerman/skills#go-bounded-context-hexagonal` (v0.6.0), `powerman/skills#go-engineering-policy` (v0.0.5).
 
-**Agent / MCP:** `cloudwego/eino` (orchestration design + ADK), `modelcontextprotocol/go-sdk` (v1.6.1), `philschmid.de#mcp-best-practices`, `modelcontextprotocol.info#docs/best-practices`.
+**Agent / MCP:** `cloudwego/eino#orchestration-design-principles`, `cloudwego/eino#adk-0.1`, `modelcontextprotocol/go-sdk` (v1.6.1), `philschmid.de#mcp-best-practices`, `modelcontextprotocol.info#docs/best-practices`.
 
 > Originally also sourced from `danicat/skills#go-best-practices` and `danicat/skills#go-project-setup`; both were deleted upstream on 2026-07-21. Their distilled content is now owned and maintained by this skill (project-setup boilerplates under `assets/`, best-practices material folded into `references/engineering-policy.md` and `references/code-review.md`).
 
