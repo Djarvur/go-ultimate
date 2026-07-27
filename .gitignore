@@ -4,6 +4,22 @@
 .idea/
 .vscode/
 
-# Go build output (assets/ boilerplates are reference templates, not built here)
+# Go build output. assets/ templates ARE built in place — assets/README.md makes
+# `go build ./...` a mandatory gate — so their binaries land in the work tree.
 *.test
 *.out
+
+# Compiled binaries from the assets/ templates and the bundled script.
+/skills/go-ultimate/assets/cli-simple/my-tool
+/skills/go-ultimate/assets/cli-cobra/my-cli
+/skills/go-ultimate/assets/webservice/webservice
+/skills/go-ultimate/assets/mcp-server/mcp-server
+/skills/go-ultimate/assets/game/game
+/skills/go-ultimate/scripts/goversion/goversion
+
+# Cross-platform and debugger artifacts
+*.exe
+*.dll
+*.so
+*.dylib
+__debug_bin*
