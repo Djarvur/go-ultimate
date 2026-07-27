@@ -27,7 +27,9 @@ These are lightweight smoke tests, not a full eval harness — see
 - Agent runs the bundled detector:
   `go run <skill-dir>/scripts/goversion/main.go .`
 - Agent states the detected version once, e.g. *"This project is using Go 1.24, so I'll use features up to and including this version."*
-- For Go 1.22+, the answer uses `cmp.Or(s, "unknown")` (not an `if`/`else` chain).
+- For Go 1.22+, the answer uses `cmp.Or(list...)` with `"unknown"` as the final fallback
+  (`cmp.Or(append(list, "unknown")...)`, or `cmp.Or(cmp.Or(list...), "unknown")`) — not an
+  `if`/`else` chain.
 - For Go < 1.22, the answer falls back to an `if`/`else` (the skill does not use features newer than the target).
 
 **Failure signals:**
@@ -142,7 +144,7 @@ func NewServer(opts ...Option) *Server { ... }
 **Expected behavior:**
 - Skill activates (MCP server + Go).
 - Agent uses the **official `modelcontextprotocol/go-sdk`** (not `mark3labs/mcp-go`) as the default, with a one-line rationale if asked.
-- Agent uses **typed tool handlers via `mcp.AddTool[In, Out]`** (generics) — not `map[string]any` args.
+- Agent uses **typed tool handlers via the generic `mcp.AddTool`** (`In`/`Out` inferred from the handler) — not `map[string]any` args.
 - Agent implements **two-channel errors**: tool-execution failure as `*mcp.CallToolResult{IsError: true}`, protocol failure as a Go `error`.
 - Agent designs the tool around the **outcome** ("search and return top result with snippet"), not a CRUD operation.
 - Tool args are a **flat typed struct** with constrained types.

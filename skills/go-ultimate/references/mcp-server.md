@@ -91,10 +91,24 @@ idiomatic, composable place for them.
 Tool handlers are **typed via generics**:
 
 ```go
-mcp.AddTool[In, Out](server, &mcp.Tool{...}, handler)
-// handler: func(context.Context, *mcp.ServerRequest[*mcp.CallToolParamsFor[In]])
-//                       (*mcp.CallToolResultFor[Out], error)
+// mcp/server.go
+func AddTool[In, Out any](s *Server, t *Tool, h ToolHandlerFor[In, Out])
+
+// mcp/tool.go — the handler shape
+type ToolHandlerFor[In, Out any] func(
+    context.Context, *CallToolRequest, In,
+) (*CallToolResult, Out, error)
 ```
+
+`In` and `Out` are inferred from the handler, so call sites read
+`mcp.AddTool(server, &mcp.Tool{...}, handler)` without explicit type arguments —
+see [`assets/mcp-server/main.go`](../assets/mcp-server/main.go).
+
+> **Do not copy the handler signature out of the SDK's `design/design.md`.** That
+> document still shows the pre-1.0 shape
+> (`func(ctx, *ServerRequest[*CallToolParamsFor[In]]) (*CallToolResultFor[Out], error)`);
+> those types do not exist in the released `mcp` package. The signature above is
+> the one in v1.6.1.
 
 - `mcp.AddTool[In,Out]` **infers `InputSchema` from `In`** (if nil) and
   `OutputSchema` from `Out` (if nil, unless `Out` is `any`); it will not modify

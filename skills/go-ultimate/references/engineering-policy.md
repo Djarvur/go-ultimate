@@ -219,7 +219,7 @@ mix. Do not introduce a `Ctx` alias in a project that does not already use one.
 ```go
 g, ctx := errgroup.WithContext(ctx)
 for _, item := range items {
-    item := item
+    // No `item := item` — since Go 1.22 each iteration gets its own copy.
     g.Go(func() error { return process(ctx, item) })
 }
 if err := g.Wait(); err != nil { ... }

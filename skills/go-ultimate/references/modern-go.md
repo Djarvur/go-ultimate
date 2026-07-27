@@ -25,10 +25,15 @@ State the version once: *"This project is using Go X.XX, so I'll use features up
 to and including this version."* Then proceed — do not list features or ask for
 confirmation on each one.
 
-> Why run from the skill directory rather than the target project? `go run
-> <abs-path>` from inside another module fails with "directory … outside main
-> module". The detector is a stdlib-only single file, so you can also copy the
-> `main.go` into the target project and run it there if you prefer.
+> Pass the **file** path, not the directory. `go run <skill-dir>/scripts/goversion/main.go`
+> works from inside any module; `go run <skill-dir>/scripts/goversion` (the package
+> form) fails with "directory … outside main module or its selected dependencies".
+>
+> `go run` still compiles in the *target* module's build context, so a broken
+> `go.mod`, an unavailable `toolchain` directive, or `-mod=vendor` can make the
+> detector fail to start. The detector is a stdlib-only single file, so in that
+> case copy the `main.go` into a scratch directory and run it there, or read the
+> `go` directive out of `go.mod` directly.
 
 ## Contents
 
