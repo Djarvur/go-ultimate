@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json.schemastore.org/codex-plugin.json",
+  "name": "go-ultimate",
+  "version": "0.4.1",
+  "description": "Opinionated Go development skill — architecture, conventions, review, and MCP/agent patterns.",
+  "author": {
+    "name": "Djarvur",
+    "url": "https://github.com/Djarvur"
+  },
+  "homepage": "https://github.com/Djarvur/go-ultimate",
+  "repository": "https://github.com/Djarvur/go-ultimate",
+  "license": "MIT",
+  "keywords": ["go", "golang", "skill", "code-review", "mcp", "agent"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Go Ultimate",
+    "shortDescription": "Opinionated Go development skill.",
+    "longDescription": "A single, opinionated skill for writing the best Go programs — routes any Go task (CLI, library, backend service, MCP server, AI agent) to the right architecture, conventions, and review checklist. Highly opinionated; overrides generic Go style and lint guidance on conflicts.",
+    "developerName": "Djarvur",
+    "category": "Languages",
+    "capabilities": ["Read", "Write"],
+    "defaultPrompt": [
+      "$go-ultimate: review this Go package for the skill's non-negotiable principles",
+      "$go-ultimate: scaffold a backend service with bounded-context hexagonal layout",
+      "$go-ultimate: design an MCP server with typed tool handlers"
+    ],
+    "websiteURL": "https://github.com/Djarvur/go-ultimate",
+    "brandColor": "#00ADD8"
+  }
+}
