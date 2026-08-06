@@ -37,9 +37,13 @@ func Wire(ctx, startupCtx context.Context, cfg Config) (*Runtime, []Unit, error)
 
 A `Unit` can be just a startable function (e.g. `func(context.Context) error` or `func()`)
 which closes over `Wire`'s `ctx` and should be called in its own goroutine.
-If it gets another context from a serve loop it should use `contextx.MergeCancel()`
-to merge only cancellation from given context into closed over `Wire`'s `ctx`.
-Returning descriptors — not started goroutines — is what keeps `wire.go` startless.
+If a unit receives a *different* context from a serve loop (e.g. an HTTP request's
+context), do not store or return it; instead propagate only its cancellation into the
+unit's closed-over base context. The stdlib way since Go 1.21 is
+`context.AfterFunc(serveCtx, cancel)` — register the serve-loop context's
+cancellation so it triggers the base context's `cancel`, then run the unit on the
+base context. Returning descriptors — not started goroutines — is what keeps
+`wire.go` startless.
 
 ## The `Runtime` value
 

@@ -3,19 +3,20 @@
 #
 # Reads baseline pins from source-versions.json and compares them against the
 # live upstream state for every source:
-#   github-path  — last commit SHA touching the path (robust whether or not the
-#                  upstream tags versions; this is the only signal that works
-#                  for donors with no frontmatter version)
-#   github-tag   — latest stable release tag (falls back to latest tag if no
-#                  release is published)
-#   website      — sha256 of the HTTP body (coarse signal; eyeball-diff on mismatch)
+#   github-path    — last commit SHA touching the path (robust whether or not the
+#                    upstream tags versions; this is the only signal that works
+#                    for donors with no frontmatter version)
+#   github-tag     — latest stable release tag (falls back to latest tag if no
+#                    release is published)
+#   manual-review  — not auto-checked; the pin records only the last manual
+#                    review date (full-body HTTP hashes were too noisy to be useful)
 #
 # Exit codes:
 #   0  no drift detected
 #   1  drift detected (an upstream moved since the pin was recorded)
 #   2  could not fetch one or more upstreams (network / 404 / tooling)
 #
-# Requires: jq, curl, gh (authenticated). Compatible with bash 3.2 (macOS).
+# Requires: jq, gh (authenticated). Compatible with bash 3.2 (macOS).
 # Run from anywhere; resolves paths relative to this script.
 set -euo pipefail
 
@@ -66,18 +67,6 @@ github_latest_tag() {
         echo "FETCH_ERROR"
     else
         echo "$tag"
-    fi
-}
-
-# Fetch a URL and print the sha256 of its body, or "FETCH_ERROR".
-website_hash() {
-    local url="$1" hash
-    hash=$(curl -fsSL -A "go-ultimate-drift-check" "$url" 2>/dev/null \
-            | shasum -a 256 2>/dev/null | cut -d' ' -f1 || true)
-    if [[ -z "$hash" ]]; then
-        echo "FETCH_ERROR"
-    else
-        echo "$hash"
     fi
 }
 
@@ -132,19 +121,16 @@ for key in "${KEYS[@]}"; do
             pinned="tag:${pinned}"
             upstream="tag:${upstream}"
             ;;
-        website)
-            url=$(jq -r --arg k "$key" '.sources[$k].url' "$PIN_FILE")
-            pinned=$(jq -r --arg k "$key" '.sources[$k].content_sha256' "$PIN_FILE")
-            upstream=$(website_hash "$url")
-            if [[ "$upstream" == "FETCH_ERROR" ]]; then
-                status="FETCH ERROR"; fetch_error=1
-            elif [[ "$pinned" == "$upstream" ]]; then
-                status="ok (coarse hash)"
-            else
-                status="DRIFT (coarse) — eyeball-diff $url"; drift_found=1
-            fi
-            pinned="h:${pinned:0:12}"
-            upstream="h:${upstream:0:12}"
+        manual-review)
+            # Not auto-checked. Full-body HTTP hashes are permanently noisy
+            # (ads, dynamic chrome) and trained people to ignore the report.
+            # These sources are reviewed by hand on a schedule; the pin records
+            # only the date of the last review, surfaced here as a reminder.
+            mr_last=$(jq -r --arg k "$key" '.sources[$k].last_reviewed // "?"' "$PIN_FILE")
+            mr_docref=$(jq -r --arg k "$key" '.sources[$k].doc_ref // "—"' "$PIN_FILE")
+            pinned="reviewed:${mr_last}"
+            upstream="—"
+            status="MANUAL REVIEW (last ${mr_last}) — eyeball ${mr_docref}"
             ;;
         *)
             status="UNKNOWN KIND: $kind"; fetch_error=1
