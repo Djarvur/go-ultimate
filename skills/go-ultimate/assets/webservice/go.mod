@@ -1,3 +1,3 @@
 module example.com/webservice
 
-go 1.24
+go 1.26
