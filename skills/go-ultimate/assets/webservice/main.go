@@ -25,19 +25,22 @@ import (
 )
 
 func main() {
-	// Long-lived base context, cancelled by SIGINT/SIGTERM. main owns signals.
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
-
-	if err := run(ctx, Config{}); err != nil {
-		fmt.Fprintf(os.Stderr, "webservice: %v\n", err)
+	// No defer here: os.Exit skips defers, so signals live inside run().
+	if err := run(context.Background(), Config{}); err != nil {
+		fmt.Fprintf(os.Stderr, "webservice: %v\n", err) // best-effort; stderr is not a reliability target for a CLI
 		os.Exit(1)
 	}
 }
 
 // run holds everything testable. It takes the resolved business Config and
 // threads it into Wire; cfg is parsed from flags/env in main in a real service.
+// It wires the signal context itself so main stays free of defers (which
+// os.Exit would skip).
 func run(ctx context.Context, cfg Config) error {
+	// Long-lived base context, cancelled by SIGINT/SIGTERM.
+	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
 	// startupCtx bounds wiring work (e.g. dialing the DB); it is never stored.
 	// For the template there is no wiring work, so it mirrors ctx.
 	startupCtx, cancel := context.WithTimeout(ctx, 10*time.Second)

@@ -36,7 +36,7 @@ func handleIndex(w http.ResponseWriter, r *http.Request, app port.App) {
 	_, _ = w.Write([]byte(greeting))
 }
 
-func handleHealth(w http.ResponseWriter, r *http.Request) {
+func handleHealth(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 }

@@ -41,13 +41,19 @@ jobs:
       - run: go build ./...
       - run: go vet ./...
       - run: go test -race ./...
-      # Fail if go.mod/go.sum are not tidy.
+      # Fail if go.mod (and go.sum, when it exists) are not tidy. Stdlib-only
+      # templates have no go.sum; only diff the files that exist.
       - run: |
           go mod tidy
-          git diff --exit-code go.mod go.sum
+          files="go.mod"
+          [ -f go.sum ] && files="$files go.sum"
+          git diff --exit-code -- $files
       - uses: golangci/golangci-lint-action@v6
         with:
-          version: latest
+          # Pin to v2: v1.x is built with Go < 1.26 and cannot lint go 1.26
+          # modules ("language version used to build golangci-lint is lower
+          # than the targeted Go version"). v2.9.0+ is built with Go 1.26.
+          version: v2.12
           working-directory: skills/go-ultimate/assets/${{ matrix.template }}
 
   # Repo-wide: gofmt clean across all .go files.

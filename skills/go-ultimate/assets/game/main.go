@@ -26,7 +26,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 // Layout returns the logical screen size given the window size.
-func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
+func (g *Game) Layout(_, _ int) (screenWidth, screenHeight int) {
 	return 320, 240
 }
 

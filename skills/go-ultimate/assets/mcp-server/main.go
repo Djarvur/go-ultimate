@@ -29,17 +29,21 @@ type greetArgs struct {
 }
 
 func main() {
-	// Ctrl-C / SIGTERM cancels the context the server runs on. main owns signals.
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
-
-	if err := run(ctx); err != nil {
-		fmt.Fprintf(os.Stderr, "mcp-server: %v\n", err)
+	// No defer here: os.Exit skips defers, so signals live inside run().
+	if err := run(context.Background()); err != nil {
+		fmt.Fprintf(os.Stderr, "mcp-server: %v\n", err) // best-effort; stderr is not a reliability target for a CLI
 		os.Exit(1)
 	}
 }
 
+// run builds the server, registers tools, and serves. main owns signals + exit
+// code; run wires the signal context itself so main stays free of defers (which
+// os.Exit would skip).
 func run(ctx context.Context) error {
+	// Ctrl-C / SIGTERM cancels the context the server runs on.
+	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
 	server := mcp.NewServer(&mcp.Implementation{
 		Name:    "greeter",
 		Version: "0.1.0",
@@ -50,7 +54,7 @@ func run(ctx context.Context) error {
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "greet",
 		Description: "say hi to a person",
-	}, func(ctx context.Context, req *mcp.CallToolRequest, args greetArgs) (*mcp.CallToolResult, any, error) {
+	}, func(_ context.Context, _ *mcp.CallToolRequest, args greetArgs) (*mcp.CallToolResult, any, error) {
 		// Two-channel errors: a tool failure (bad args, missing data) is reported
 		// via *mcp.CallToolResult (the agent can self-correct), NOT as a Go error.
 		// Return a Go error only for protocol/transport failures. See references/mcp-server.md.

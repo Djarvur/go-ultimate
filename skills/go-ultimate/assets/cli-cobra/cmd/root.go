@@ -37,7 +37,7 @@ func newRootCmd() *cobra.Command {
 		Short: "A brief description of your application",
 		Long: `A longer description that spans multiple lines and likely contains
 examples and usage of using your application.`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			return runRoot(cmd.Context(), cmd)
 		},
 	}
@@ -53,6 +53,8 @@ func runRoot(ctx context.Context, cmd *cobra.Command) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}
-	fmt.Fprintln(cmd.OutOrStdout(), "Hello from my-cli!")
+	if _, err := fmt.Fprintln(cmd.OutOrStdout(), "Hello from my-cli!"); err != nil {
+		return fmt.Errorf("write greeting: %w", err)
+	}
 	return nil
 }
