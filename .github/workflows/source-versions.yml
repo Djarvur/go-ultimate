@@ -1,0 +1,36 @@
+# Weekly upstream-drift check for go-ultimate's donor sources. Scheduled, not
+# on push/pull_request — donor drift is not a CI gate on the skill's own changes,
+# only a periodic reminder to fold upstream updates back in. Run manually any
+# time via the Actions tab.
+name: source-versions drift check
+
+on:
+  schedule:
+    # 06:00 UTC every Monday.
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  drift:
+    name: check-source-versions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run drift check
+        # Exit 0 = no drift, 1 = drift (donor moved — fold in or refresh pin),
+        # 2 = fetch failure (network/404). Don't fail the job on drift (1): it
+        # is informational, not a broken build. Fetch failures (2) do fail.
+        run: |
+          set +e
+          bash skills/go-ultimate/scripts/check-source-versions.sh
+          code=$?
+          if [ "$code" -eq 2 ]; then
+            echo "::error::could not fetch one or more upstreams"
+            exit 1
+          fi
+          exit 0
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

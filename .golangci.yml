@@ -1,0 +1,31 @@
+# golangci-lint config for go-ultimate. Matches the recommended set in
+# skills/go-ultimate/references/engineering-policy.md § Linting (mandatory in CI).
+# The repo's Go code lives in per-template modules under
+# skills/go-ultimate/assets/*/ — run golangci-lint from each of those.
+linters:
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - revive
+    - gofmt
+    - goimports
+    - unused
+    - misspell
+    - unconvert
+    - staticcheck
+    - gocritic
+    - bodyclose
+
+linters-settings:
+  govet:
+    enable:
+      - shadow
+  goimports:
+    local-prefixes: example.com
+
+issues:
+  # Don't auto-exclude common false positives.
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0

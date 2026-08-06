@@ -1,0 +1,89 @@
+# CI for go-ultimate. The skill ships Go code as per-template modules under
+# skills/go-ultimate/assets/*/ (each with its own go.mod), plus markdown docs.
+# This workflow gates every push and pull request on:
+#   - each template: build, vet, test -race, tidy, golangci-lint
+#   - repo-wide:     gofmt clean, markdown links resolve, version consistency
+# The upstream-drift check is scheduled separately (source-versions.yml).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Single matrix job: enumerate the template directories and run the Go gates
+  # in each. One failing template fails the job, with a clear name in the matrix.
+  templates:
+    name: template (${{ matrix.template }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        template: [cli-simple, cli-cobra, game, library, mcp-server, webservice]
+    defaults:
+      run:
+        working-directory: skills/go-ultimate/assets/${{ matrix.template }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: skills/go-ultimate/assets/${{ matrix.template }}/go.mod
+          cache-dependency-path: skills/go-ultimate/assets/${{ matrix.template }}/go.sum
+      - run: go mod download
+      - run: go build ./...
+      - run: go vet ./...
+      - run: go test -race ./...
+      # Fail if go.mod/go.sum are not tidy.
+      - run: |
+          go mod tidy
+          git diff --exit-code go.mod go.sum
+      - uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          working-directory: skills/go-ultimate/assets/${{ matrix.template }}
+
+  # Repo-wide: gofmt clean across all .go files.
+  gofmt:
+    name: gofmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          bad=$(gofmt -l .)
+          if [ -n "$bad" ]; then
+            echo "::error::gofmt would reformat:$bad"
+            echo "$bad"
+            exit 1
+          fi
+
+  # Repo-wide: every markdown link resolves. Catches the class of bug in issue #5.
+  links:
+    name: markdown links
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: lycheeverse/lychee-action@v2
+        with:
+          # Check relative and remote links in markdown. Skip the installed-plugin
+          # cache if present. Fail on any broken link.
+          args: >-
+            --no-progress
+            --root-dir ${{ github.workspace }}
+            '*.md' '**/*.md'
+
+  # Repo-wide: the version must be identical in plugin.json, SKILL.md, README.md.
+  version-consistency:
+    name: version consistency
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          bash skills/go-ultimate/scripts/check-version-consistency.sh
