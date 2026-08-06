@@ -3,8 +3,7 @@
 **Source:** [Eino — Orchestration Design Principles](https://www.cloudwego.io/docs/eino/core_modules/chain_and_graph_orchestration/orchestration_design_principles/)
 + [Eino ADK 0.1](https://www.cloudwego.io/docs/eino/overview/eino_adk0_1/) (primary,
 natively Go). Tool-design discipline cross-references
-[mcp-server.md](mcp-server.md) (Phil Schmid). Full donor analysis in
-[`../../skills-analysis.md`](../../skills-analysis.md) §7.
+[mcp-server.md](mcp-server.md) (Phil Schmid).
 
 **Applies to:** LLM-driven agents that call tools and orchestrate multi-step
 reasoning (ReAct loops, multi-agent topologies). For servers *exposing* tools
@@ -63,8 +62,8 @@ The rules:
   case); (3) upstream interface + downstream concrete type (only checkable at
   runtime).
 
-> This rule directly informs **conflict #17** in the analysis: cross-agent
-> state is typed via a generic `S` (see State-externalism), not `map[string]any`.
+> This rule is the reason cross-agent state is typed via a generic `S` (see
+> State-externalism), never `map[string]any`.
 
 ---
 

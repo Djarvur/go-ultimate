@@ -1,5 +1,5 @@
 {
-  "_comment": "Baseline pins for go-ultimate's donor sources. Used by scripts/check-source-versions.sh to detect upstream drift. Update a pin whenever you fold a change from that donor back into the skill (and bump SKILL.md version). Pin types: commit_sha = last commit touching a GitHub path; tag = latest stable release/tag; content_sha256 = sha256 of the HTTP body.",
+  "_comment": "Baseline pins for go-ultimate's donor sources. Used by scripts/check-source-versions.sh to detect upstream drift. Update a pin whenever you fold a change from that donor back into the skill (and bump SKILL.md version). Pin types: commit_sha = last commit touching a GitHub path (kind: github-path); tag = latest stable release/tag (kind: github-tag); manual-review = not auto-checked, records last_reviewed date (kind: manual-review).",
   "_updated": "2026-07-26",
   "sources": {
     "teetsh-review": {
@@ -48,17 +48,17 @@
       "doc_ref": "references/mcp-server.md, assets/mcp-server/"
     },
     "philschmid-mcp-best-practices": {
-      "kind": "website",
+      "kind": "manual-review",
       "url": "https://www.philschmid.de/mcp-best-practices",
-      "content_sha256": "525a6d85fe1537f8b32456b71cf8f319dfbb1994078241dfaa138ea631b34452",
-      "_note": "Published 2026-01-21 per Open Graph metadata; no update marker.",
+      "last_reviewed": "2026-08-06",
+      "_note": "Published 2026-01-21 per Open Graph metadata; no update marker. Not auto-checked: full-body HTTP hashes were permanently noisy, so this source is reviewed by hand on a schedule. Update last_reviewed after each review.",
       "doc_ref": "references/mcp-server.md"
     },
     "modelcontextprotocol-info-best-practices": {
-      "kind": "website",
+      "kind": "manual-review",
       "url": "https://modelcontextprotocol.info/docs/best-practices/",
-      "content_sha256": "89e442cfef95e8147bd1ffeb921e595f906149ad085ff8dccb7c88c81bfc65ba",
-      "_note": "Page is undated. Content hashes are noisy (ads, dynamic chrome) — treat as a coarse signal and eyeball-diff on mismatch.",
+      "last_reviewed": "2026-08-06",
+      "_note": "Page is undated. Not auto-checked (see philschmid entry). Update last_reviewed after each review.",
       "doc_ref": "references/mcp-server.md"
     }
   },

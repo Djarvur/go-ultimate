@@ -1,8 +1,8 @@
 # go-ultimate
 
-A single, opinionated Claude Code skill for writing the best Go programs — synthesized from four general-Go skills plus five agent/MCP donors. Routes any Go task (CLI, library, backend service, MCP server, AI agent) to the right architecture, conventions, and review checklist. Highly opinionated; overrides generic Go style and lint guidance on conflicts.
+A single, opinionated Claude Code skill for writing the best Go programs — synthesized from four general-Go skills plus four agent/MCP donors (one donor contributes two documents). Routes any Go task (CLI, library, backend service, MCP server, AI agent) to the right architecture, conventions, and review checklist. Highly opinionated; overrides generic Go style and lint guidance on conflicts.
 
-> **Status:** v0.4.1. Designed for Claude Code, ZCode, and similar AI coding agents. MIT licensed.
+> **Status:** v0.4.1. Designed for Claude Code, and any harness that reads the Agent Skills `SKILL.md` format. MIT licensed.
 
 ## What's inside
 
@@ -35,7 +35,7 @@ Clone and point your harness at the skill directory:
 git clone https://github.com/Djarvur/go-ultimate.git
 ```
 
-For ZCode, copy or symlink `skills/go-ultimate/` into `~/.zcode/skills/`. For Cursor / Codex / OpenCode, use the configured skills directory. The `SKILL.md` contains a `<skill-dir>` resolution table covering each harness.
+For ZCode, copy or symlink `skills/go-ultimate/` into `~/.zcode/skills/`. For other harnesses (Cursor, Codex CLI, OpenCode), support is **best-effort and unverified** — if your harness reads the `SKILL.md` format, point it at this directory; otherwise installation is not confirmed. The `SKILL.md` documents `<skill-dir>` resolution for the confirmed harnesses.
 
 ## How it works
 
@@ -50,7 +50,7 @@ See the [`SKILL.md`](skills/go-ultimate/SKILL.md) for the full opinionated rule 
 
 ## Donor sources
 
-The skill synthesizes nine upstream sources. Full attribution and the live pins used to detect upstream drift are in [`skills/go-ultimate/scripts/source-versions.json`](skills/go-ultimate/scripts/source-versions.json). Summary:
+The skill synthesizes eight upstream sources. Full attribution and the live pins used to detect upstream drift are in [`skills/go-ultimate/scripts/source-versions.json`](skills/go-ultimate/scripts/source-versions.json). Summary:
 
 **General Go:** `teetsh-org/claude-skills#golang-code-review`, `JetBrains/go-modern-guidelines#use-modern-go`, `powerman/skills#go-bounded-context-hexagonal` (v0.6.0), `powerman/skills#go-engineering-policy` (v0.0.5).
 

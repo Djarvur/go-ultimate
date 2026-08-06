@@ -1,0 +1,41 @@
+# golangci-lint v2 config for go-ultimate. Matches the linter set in
+# skills/go-ultimate/references/engineering-policy.md § Linting (mandatory in CI).
+# The v2 schema splits linters from formatters and enables several linters
+# (errcheck, govet, ineffassign, staticcheck, unused) by default, so only the
+# non-default linters from the policy are listed under linters.enable below.
+# Run golangci-lint from each per-template module under skills/go-ultimate/assets/.
+version: "2"
+linters:
+  enable:
+    - bodyclose
+    - gocritic
+    - misspell
+    - revive
+    - unconvert
+  settings:
+    govet:
+      enable:
+        - shadow
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - example.com
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

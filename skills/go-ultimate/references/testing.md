@@ -122,4 +122,4 @@ func TestDoThing(t *testing.T) {
 ## Sources
 
 - [powerman `go-engineering-policy`](https://github.com/powerman/skills) — testing section, gomock + go-mockgen.
-- Assertion-library choice (`vanilla` default, testify as fallback) is the ultimate-skill resolution; see [`../../skills-analysis.md`](../../skills-analysis.md) §3 conflict #3.
+- Assertion-library choice (`vanilla` default, testify as fallback) is this skill's own resolution of a donor disagreement — the donors split on whether to prefer an assertion library.

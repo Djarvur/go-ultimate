@@ -3,8 +3,7 @@
 **Source:** [go-sdk `design/design.md`](https://github.com/modelcontextprotocol/go-sdk/blob/main/design/design.md)
 (primary, natively Go), [Phil Schmid — MCP best practices](https://www.philschmid.de/mcp-best-practices),
 [modelcontextprotocol.info best-practices](https://modelcontextprotocol.info/docs/best-practices/)
-(secondary, translated from language-agnostic). Full donor analysis in
-[`../../skills-analysis.md`](../../skills-analysis.md) §7.
+(secondary, translated from language-agnostic).
 
 **Applies to:** servers exposing tools / resources / prompts to LLMs over the
 Model Context Protocol. For general backend services see

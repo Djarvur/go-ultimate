@@ -22,25 +22,31 @@ import (
 	"time"
 
 	inhttp "example.com/webservice/internal/in/http"
-	"example.com/webservice/internal/port"
 )
 
 func main() {
-	// Long-lived base context, cancelled by SIGINT/SIGTERM. main owns signals.
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
-
-	if err := run(ctx); err != nil {
-		fmt.Fprintf(os.Stderr, "webservice: %v\n", err)
+	// No defer here: os.Exit skips defers, so signals live inside run().
+	if err := run(context.Background(), Config{}); err != nil {
+		fmt.Fprintf(os.Stderr, "webservice: %v\n", err) // best-effort; stderr is not a reliability target for a CLI
 		os.Exit(1)
 	}
 }
 
-// run holds everything testable. A real service takes a resolved business Config
-// as its second parameter — run(ctx, cfg) error — and passes it to Wire.
-func run(ctx context.Context) error {
-	var app port.App // nil here: Wire builds the real one. See wire.go.
-	rt, err := Wire(ctx, app)
+// run holds everything testable. It takes the resolved business Config and
+// threads it into Wire; cfg is parsed from flags/env in main in a real service.
+// It wires the signal context itself so main stays free of defers (which
+// os.Exit would skip).
+func run(ctx context.Context, cfg Config) error {
+	// Long-lived base context, cancelled by SIGINT/SIGTERM.
+	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	// startupCtx bounds wiring work (e.g. dialing the DB); it is never stored.
+	// For the template there is no wiring work, so it mirrors ctx.
+	startupCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	rt, units, err := Wire(ctx, startupCtx, cfg)
 	if err != nil {
 		return fmt.Errorf("wire: %w", err)
 	}
@@ -49,6 +55,7 @@ func run(ctx context.Context) error {
 			slog.Error("releasing runtime resources", "err", err)
 		}
 	}()
+	_ = units // run in main's serve loop; empty in the template.
 
 	addr := net.JoinHostPort("localhost", "8080")
 	httpServer := &http.Server{
