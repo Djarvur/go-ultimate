@@ -38,6 +38,15 @@ jobs:
           go-version-file: skills/go-ultimate/assets/${{ matrix.template }}/go.mod
           cache-dependency-path: skills/go-ultimate/assets/${{ matrix.template }}/go.sum
       - run: go mod download
+      # The game template uses ebiten, whose GLFW-based graphics driver needs
+      # the X11/Mesa/ALSA C dev headers to build on Linux. Other templates are
+      # pure Go or stdlib-only and skip this step.
+      - name: Install native graphics deps (game template only)
+        if: matrix.template == 'game'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libc6-dev libgl1-mesa-dev libx11-dev libxcursor-dev libxrandr-dev libxinerama-dev libxi-dev libxxf86vm-dev libasound2-dev pkg-config
+        working-directory: ${{ github.workspace }}
       - run: go build ./...
       - run: go vet ./...
       - run: go test -race ./...
@@ -48,11 +57,12 @@ jobs:
           files="go.mod"
           [ -f go.sum ] && files="$files go.sum"
           git diff --exit-code -- $files
-      - uses: golangci/golangci-lint-action@v6
+      - uses: golangci/golangci-lint-action@v7
         with:
           # Pin to v2: v1.x is built with Go < 1.26 and cannot lint go 1.26
           # modules ("language version used to build golangci-lint is lower
           # than the targeted Go version"). v2.9.0+ is built with Go 1.26.
+          # Requires golangci-lint-action v7+ (v6 rejects v2 version strings).
           version: v2.12
           working-directory: skills/go-ultimate/assets/${{ matrix.template }}
 
