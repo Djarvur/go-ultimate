@@ -10,8 +10,9 @@ Run each prompt against a fresh agent session in a Go project (or an empty
 directory for scaffolding prompts). Compare the agent's behavior to the
 "Expected behavior" checklist. Any mismatch is a regression.
 
-These are lightweight smoke tests, not a full eval harness — see
-[`../../skill-audit-report.md`](../../skill-audit-report.md) §6 for the rationale.
+These are lightweight smoke tests, not a full eval harness — the rationale
+(methodology, scoring) is not shipped with the skill; the rules in `SKILL.md`
+and `references/` are the canonical source.
 
 ---
 

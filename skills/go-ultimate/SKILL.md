@@ -10,7 +10,7 @@ description: >
   overrides generic Go style and lint guidance on conflicts.
 user-invocable: true
 license: MIT
-compatibility: Designed for Claude Code, ZCode, or similar AI coding agents, and for any Go project.
+compatibility: Designed for Claude Code, and for any harness that reads the Agent Skills SKILL.md format. Targets any Go project.
 metadata:
   author: go-ultimate-skill
   version: '0.4.1'
@@ -41,9 +41,9 @@ metadata:
 # Go Ultimate Skill
 
 A single, opinionated skill for writing the best Go programs — synthesized from
-four general-Go skills plus five agent/MCP donors. The full reasoning behind
-every opinion (consensus, conflicts, resolutions) lives in
-[`../skills-analysis.md`](../skills-analysis.md).
+four general-Go skills plus four agent/MCP donors (one donor, eino, contributes
+two documents). Opinions represent the synthesized consensus; where the donors
+disagreed, this skill resolved the conflict per the precedence ladder below.
 
 ## When this skill applies
 
@@ -55,20 +55,26 @@ It overrides generic Go style/lint guidance when they conflict.
 ## Setup — resolving `<skill-dir>`
 
 Several instructions in this skill reference `<skill-dir>` — the absolute path to
-this installed skill directory. Resolve it once per session, per the host
-harness:
+this installed skill directory. Resolve it once per session.
+
+**Primary rule:** `<skill-dir>` is the directory containing this `SKILL.md`.
+That always works, regardless of how the skill was installed. The bundled
+detector is at `<skill-dir>/scripts/goversion/main.go`; the templates are at
+`<skill-dir>/assets/`.
+
+For specific harnesses, the install path is:
 
 | Harness | Skill location |
 |---|---|
+| Claude Code (plugin) | `${CLAUDE_PLUGIN_ROOT}/skills/go-ultimate` — the harness resolves this at runtime; the path includes a version directory, so do not hardcode it. |
+| Claude Code (manual clone) | the cloned `skills/go-ultimate/` directory. |
 | ZCode | `~/.zcode/skills/go-ultimate` |
-| Claude Code | `~/.claude/skills/go-ultimate` |
-| Cursor | `~/.cursor/skills/go-ultimate` (or the workspace `.cursor/skills/`) |
-| Codex CLI / OpenCode | the configured skills directory |
-| Repo-local | `<repo>/.claude/skills/go-ultimate` (or equivalent) |
 
-If unsure, locate the directory containing this `SKILL.md` and use its parent.
-The bundled detector is at `<skill-dir>/scripts/goversion/main.go`; the
-templates are at `<skill-dir>/assets/`.
+> **Other harnesses** (Cursor, Codex CLI, OpenCode): the table entries that
+> previously appeared here were unverified — nothing in this repo establishes
+> that those agents read the `SKILL.md` format from a fixed directory. If your
+> harness supports the Agent Skills `SKILL.md` format, point it at this
+> directory; otherwise this skill is not confirmed to work there.
 
 ## How to use this skill
 
@@ -252,9 +258,9 @@ back to the user.
 ## Evaluating the skill itself
 
 Example prompts and expected behaviors for catching drift live in
-[`evals/`](evals/README.md). Run them when the skill is updated. The full audit
-(methodology, scores, recommendations) is in
-[`../skill-audit-report.md`](../skill-audit-report.md).
+[`evals/`](evals/README.md). Run them when the skill is updated. The audit
+methodology that produced this skill is not shipped with it; the rules above are
+the canonical source.
 
 This skill is **highly opinionated**. Do not relitigate these rules at runtime —
 apply them, and note any project-specific deviation in the project's own
