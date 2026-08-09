@@ -10,7 +10,7 @@ description: >
   overrides generic Go style and lint guidance on conflicts.
 user-invocable: true
 license: MIT
-compatibility: Designed for Claude Code, and for any harness that reads the Agent Skills SKILL.md format. Targets any Go project.
+compatibility: Designed for Claude Code, Codex, Cursor, Grok Build, GitHub Copilot CLI, OpenCode, and any harness that reads the Agent Skills SKILL.md format. Targets any Go project.
 metadata:
   author: go-ultimate-skill
   version: '0.4.1'
@@ -62,19 +62,28 @@ That always works, regardless of how the skill was installed. The bundled
 detector is at `<skill-dir>/scripts/goversion/main.go`; the templates are at
 `<skill-dir>/assets/`.
 
-For specific harnesses, the install path is:
+This skill ships a manifest for each supported harness (see the repo root), so it
+can be installed as a plugin on all of them. Each harness resolves the plugin
+root differently; use the row matching yours:
 
-| Harness | Skill location |
+| Harness | `<skill-dir>` resolution |
 |---|---|
 | Claude Code (plugin) | `${CLAUDE_PLUGIN_ROOT}/skills/go-ultimate` — the harness resolves this at runtime; the path includes a version directory, so do not hardcode it. |
-| Claude Code (manual clone) | the cloned `skills/go-ultimate/` directory. |
-| ZCode | `~/.zcode/skills/go-ultimate` |
+| Codex (plugin) | `${PLUGIN_ROOT}/skills/go-ultimate` — Codex exposes the plugin root via `${PLUGIN_ROOT}` in hook/script contexts. |
+| Cursor (plugin) | the plugin's `skills/go-ultimate/` directory; Cursor installs plugins into its cache. Confirm the absolute path via Cursor's plugin UI. |
+| Grok Build (plugin) | the plugin's `skills/go-ultimate/` directory; Grok reads Claude-compatible plugin content. |
+| GitHub Copilot CLI (plugin) | the plugin's `skills/go-ultimate/` directory. |
+| ZCode | `~/.zcode/skills/go-ultimate` (or the workspace `.zcode/skills/`); ZCode also recognizes the `.claude-plugin/` manifest. |
+| OpenCode | the directory you copied `skills/go-ultimate/` into (manual install — see README). |
+| Any harness (manual clone) | the cloned `skills/go-ultimate/` directory. |
 
-> **Other harnesses** (Cursor, Codex CLI, OpenCode): the table entries that
-> previously appeared here were unverified — nothing in this repo establishes
-> that those agents read the `SKILL.md` format from a fixed directory. If your
-> harness supports the Agent Skills `SKILL.md` format, point it at this
-> directory; otherwise this skill is not confirmed to work there.
+> **The `<skill-dir>` path matters for this skill.** Unlike markdown-only skills,
+> go-ultimate executes its bundled detector (`scripts/goversion/main.go`) and
+> references its `assets/` templates by path. If your harness does not expose the
+> plugin root through a variable (Cursor, Grok, Copilot, OpenCode), locate the
+> installed `skills/go-ultimate/` directory once and use that absolute path. As a
+> fallback, the detector is a stdlib-only single file — copy `main.go` into the
+> target project and run it there if path resolution fails.
 
 ## How to use this skill
 

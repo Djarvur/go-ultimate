@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json.schemastore.org/grok-plugin.json",
+  "name": "go-ultimate",
+  "displayName": "Go Ultimate",
+  "version": "0.4.1",
+  "description": "Opinionated Go development skill — architecture, conventions, review, and MCP/agent patterns.",
+  "author": {
+    "name": "Djarvur",
+    "url": "https://github.com/Djarvur"
+  },
+  "homepage": "https://github.com/Djarvur/go-ultimate",
+  "repository": "https://github.com/Djarvur/go-ultimate",
+  "license": "MIT",
+  "keywords": ["go", "golang", "skill", "code-review", "mcp", "agent"],
+  "skills": "./skills/"
+}

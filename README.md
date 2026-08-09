@@ -2,7 +2,7 @@
 
 A single, opinionated Claude Code skill for writing the best Go programs — synthesized from four general-Go skills plus four agent/MCP donors (one donor contributes two documents). Routes any Go task (CLI, library, backend service, MCP server, AI agent) to the right architecture, conventions, and review checklist. Highly opinionated; overrides generic Go style and lint guidance on conflicts.
 
-> **Status:** v0.4.1. Designed for Claude Code, and any harness that reads the Agent Skills `SKILL.md` format. MIT licensed.
+> **Status:** v0.4.1. Designed for Claude Code, Codex, Cursor, Grok Build, GitHub Copilot CLI, OpenCode, and any harness that reads the Agent Skills `SKILL.md` format. MIT licensed.
 
 ## What's inside
 
@@ -18,16 +18,64 @@ The skill lives under [`skills/go-ultimate/`](skills/go-ultimate/) and is struct
 
 ## Install
 
-### Via the Djarvur marketplace (Claude Code)
+go-ultimate ships a plugin manifest per harness (see the repo root), so the same skill installs natively on each. Install via the [Djarvur marketplace](https://github.com/Djarvur/cc-mplace) (`Djarvur/cc-mplace`), which indexes go-ultimate for every supported host. Once installed, it auto-triggers on any Go task (mentions of Go, Golang, `go.mod`, a Go package, MCP server, or AI agent).
+
+### Claude Code
 
 ```bash
 claude plugin marketplace add Djarvur/cc-mplace
 claude plugin install go-ultimate
 ```
 
-Once installed, the skill auto-triggers on any Go task (mentions of Go, Golang, `go.mod`, a Go package, MCP server, or AI agent).
+### Codex
 
-### Manual / non-Claude-Code harnesses
+```bash
+codex plugin marketplace add Djarvur/cc-mplace
+codex plugin add go-ultimate@djarvur-plugin-marketplace
+```
+
+Invoke with `$go-ultimate:go-ultimate`.
+
+### Cursor
+
+```bash
+agent plugin marketplace add https://github.com/Djarvur/cc-mplace.git
+```
+
+Then install go-ultimate from the Cursor marketplace UI.
+
+### Grok Build
+
+```bash
+grok plugin install 'Djarvur/cc-mplace#go-ultimate' --trust
+```
+
+### GitHub Copilot CLI
+
+```bash
+copilot plugin marketplace add Djarvur/cc-mplace
+copilot plugin install go-ultimate@djarvur-plugin-marketplace
+```
+
+### OpenCode
+
+OpenCode consumes skills as files rather than a marketplace bundle. Copy the skill into your project (or globally below `~/.config/opencode/`):
+
+```bash
+src="$(mktemp -d)"
+git clone --depth 1 https://github.com/Djarvur/go-ultimate.git "$src"
+mkdir -p .opencode
+cp -R "$src/skills/go-ultimate" .opencode/skills/
+rm -rf "$src"
+```
+
+Invoke via OpenCode's skill tool; the `SKILL.md` documents `<skill-dir>` resolution.
+
+### ZCode
+
+Copy or symlink `skills/go-ultimate/` into `~/.zcode/skills/`. ZCode also recognizes the `.claude-plugin/` manifest.
+
+### Manual / unsupported harness
 
 Clone and point your harness at the skill directory:
 
@@ -35,7 +83,7 @@ Clone and point your harness at the skill directory:
 git clone https://github.com/Djarvur/go-ultimate.git
 ```
 
-For ZCode, copy or symlink `skills/go-ultimate/` into `~/.zcode/skills/`. For other harnesses (Cursor, Codex CLI, OpenCode), support is **best-effort and unverified** — if your harness reads the `SKILL.md` format, point it at this directory; otherwise installation is not confirmed. The `SKILL.md` documents `<skill-dir>` resolution for the confirmed harnesses.
+The `SKILL.md` documents `<skill-dir>` resolution per harness.
 
 ## How it works
 
