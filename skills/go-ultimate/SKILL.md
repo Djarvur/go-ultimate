@@ -12,8 +12,13 @@ user-invocable: true
 license: MIT
 compatibility: Designed for Claude Code, Codex, Cursor, Grok Build, GitHub Copilot CLI, OpenCode, and any harness that reads the Agent Skills SKILL.md format. Targets any Go project.
 metadata:
-  author: go-ultimate-skill
-  version: '0.4.1'
+  author: Djarvur
+  version: '0.10.0'
+  maintainers:
+    - name: Daniel Podolsky
+      url: https://github.com/onokonem
+    - name: Olga Pichuzhkina
+      url: https://github.com/vyhuholl
   sources:
     - teetsh-org/claude-skills#golang-code-review
     - JetBrains/go-modern-guidelines#use-modern-go

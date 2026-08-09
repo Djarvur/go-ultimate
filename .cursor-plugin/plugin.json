@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/cursor-plugin.json",
   "name": "go-ultimate",
   "displayName": "Go Ultimate",
-  "version": "0.4.1",
+  "version": "0.10.0",
   "description": "Opinionated Go development skill — architecture, conventions, review, and MCP/agent patterns.",
   "author": {
     "name": "Djarvur",
