@@ -77,7 +77,15 @@ ptr.Store(cfg)
 **`slices` package:** `Contains`, `Index`, `IndexFunc`, `Sort`, `SortFunc`, `Min`, `Max`, `Reverse`, `Compact`, `Clip`, `Clone`.
 **`maps` package:** `Clone`, `Copy`, `DeleteFunc`.
 **`sync`:** `sync.OnceFunc`, `sync.OnceValue` instead of `sync.Once` + wrapper.
-**`context`:** `AfterFunc`, `WithTimeoutCause`, `WithDeadlineCause`.
+**`context`:** `AfterFunc`, `WithoutCancel`, `WithTimeoutCause`, `WithDeadlineCause`.
+
+```go
+// WithoutCancel keeps values (trace-id, auth) but drops cancellation — for work
+// that must outlive the request that started it. Always give it its own timeout.
+bg, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+defer cancel()
+go emitAudit(bg, event)
+```
 
 ### Go 1.22+
 - `for i := range n` and `for i := range len(items)` instead of `for i := 0; i < len(items); i++`.
@@ -85,6 +93,9 @@ ptr.Store(cfg)
 - `cmp.Or(flag, env, config, "default")` — first non-zero value.
 - `reflect.TypeFor[T]()`.
 - Enhanced `http.ServeMux` patterns: `mux.HandleFunc("GET /api/{id}", h)` + `r.PathValue("id")`.
+- `math/rand/v2` instead of `math/rand`: better generators, no global seeding ritual,
+  `rand.N[T]` for any integer type. (Neither is a CSPRNG — `crypto/rand` for anything
+  security-bearing.)
 
 ```go
 // cmp.Or replaces the classic if-else chain for "first non-zero value".
@@ -97,6 +108,8 @@ name := cmp.Or(os.Getenv("NAME"), "default")
 - `time.Tick` is safe to use freely (GC now reclaims unreferenced tickers;
   `Stop` is no longer needed to help the GC, so there is no longer any reason
   to prefer `NewTicker` when `Tick` will do).
+- `unique.Make[T]` to intern comparable values that repeat heavily (labels, tags,
+  interned strings): one canonical copy, and `unique.Handle` compares by pointer.
 
 ```go
 // Three idioms for working with map iterators.
@@ -111,6 +124,14 @@ for k := range maps.Keys(m) { process(k) } // iterate directly, no allocation
 - `omitzero` (not `omitempty`) for `time.Duration`, `time.Time`, structs, slices, maps in JSON tags.
 - `b.Loop()` (not `for i := 0; i < b.N; i++`) in benchmarks.
 - `strings.SplitSeq` / `strings.FieldsSeq` / `bytes.SplitSeq` / `bytes.FieldsSeq` when iterating split results in a for-range.
+- `os.Root` (`os.OpenRoot(dir)`) whenever a path comes from outside the program:
+  every operation is confined to that subtree, so `../` escapes stop being your
+  problem. Prefer it to hand-rolled `filepath.Clean` checks.
+- `runtime.AddCleanup` instead of `runtime.SetFinalizer` — attachable more than
+  once, does not resurrect the object, works with cycles.
+- Generic type aliases are fully supported: `type Set[T comparable] = map[T]struct{}`.
+- The `tool` directive in `go.mod` instead of the `tools.go` blank-import hack —
+  see [engineering-policy.md § Code generation](engineering-policy.md).
 
 ```go
 // 1.24+ benchmark
@@ -138,6 +159,11 @@ for _, item := range items {
 }
 wg.Wait()
 ```
+
+- `testing/synctest` for testing concurrent code: inside a bubble the `time`
+  package runs on a fake clock, so timeouts, tickers and retry/backoff become
+  deterministic instead of `time.Sleep`-flaky. See
+  [testing.md § Testing concurrent code](testing.md).
 
 ### Go 1.26+
 - `new(val)` returns a pointer to any value: `new(30)` → `*int`, `new(true)` → `*bool`, `new(T{})` → `*T`.

@@ -83,8 +83,26 @@ architecture evaluation, test-quality checks, or auditing existing code.
 - Input validation and sanitization at the boundary.
 - Parameterized SQL — no string concatenation. `db.Query("... WHERE id = $1", id)`.
 - `crypto/rand` for tokens/secrets; `bcrypt`/`argon2` for passwords.
+  (`math/rand` and `math/rand/v2` are **not** CSPRNGs.)
 - TLS configuration explicit, not default-InsecureSkipVerify.
 - Authorization checks at the entrypoint, not buried in business logic.
+- **Paths from outside the program are confined** — `os.Root` / `os.OpenRoot`
+  (Go 1.24+) rather than hand-rolled `filepath.Clean` checks, which are easy to
+  get subtly wrong.
+- **`os/exec` takes arguments as a slice**, never an interpolated shell string;
+  do not invoke a shell unless the shell is the actual requirement.
+- **Unbounded reads are bounded** — `http.MaxBytesReader` on request bodies, and
+  a cap on decompressed size for any archive or compressed payload.
+
+### Resource handling
+- **No `http.DefaultClient` / `http.Get` / `http.Post` in production code** —
+  no timeout. Explicit `*http.Client` with `Timeout`, plus a per-request context
+  deadline. See [engineering-policy.md § Outbound HTTP](engineering-policy.md).
+- Response bodies closed **and** drained, so connections return to the pool
+  (`bodyclose`).
+- Servers set `ReadHeaderTimeout` at minimum.
+- Panics only on programmer error, never across a public API boundary; inbound
+  adapters of long-running servers have a recover middleware.
 
 ### Testing
 - Tests cover success and error paths.
