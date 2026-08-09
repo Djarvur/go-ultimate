@@ -13,9 +13,44 @@
   `assert`/`require` for consistency. Do not introduce testify into a project
   that does not already use it.
 - **External test package** — `package xxx_test`, in a `xxx_test.go` file beside
-  the code under test.
+  the code under test. See [§ Test placement](#test-placement) for the two
+  exceptions.
 - **Tests must only test the project's own code**, not stdlib or third-party
   libraries. Mock external dependencies (e.g. `os`, filesystem, network).
+
+## Test placement
+
+Go allows two packages in one directory — `foo` and `foo_test` — which gives
+three possible homes for a test. Rank them in this order:
+
+**1. External test package (default).** `package foo_test` in `foo_test.go`. It
+sees exactly what a real consumer sees, so it cannot accidentally couple to
+implementation details, and it doubles as a usage example.
+
+**2. `export_test.go`** when the external test needs an unexported identifier. A
+`_test.go` file in `package foo` that re-exports internals **to the test binary
+only** — it never reaches the production binary:
+
+```go
+// export_test.go — package foo
+var ParseDirective = parseDirective // visible to foo_test, absent from the build
+```
+
+**3. Internal test** — `package foo` in `foo_internal_test.go` — only when the
+behavior cannot be reached through the public surface at all: a non-trivial
+private algorithm, parser invariants, a state machine with no observable
+intermediate states.
+
+`_internal_test.go` is a **naming convention for the reader, not a Go rule**. The
+compiler cares only about the package clause; the filename changes nothing.
+
+> **Never export an identifier from a production file for tests** — no
+> `ParseForTest`, no `ExportedForTesting`. Those become public API and ship in
+> the binary. That is what `export_test.go` exists to prevent.
+
+Needing an internal test is a signal about the public surface, not permission for
+one. If behavior cannot be tested from outside, first ask whether it should be
+reachable from outside.
 
 ## Naming
 
@@ -31,9 +66,20 @@
 ## Idioms
 
 - Begin most tests with `t.Parallel()` (after the early `t.Helper()`/setup if any).
+- **`t.Setenv` and `t.Chdir` cannot be used in a parallel test** — both mutate
+  process-wide state and panic if the test, or any ancestor, called
+  `t.Parallel()`. This is the one legitimate exception to parallel-by-default.
+  Better still: inject configuration instead of reading the environment inside
+  the code under test, and the test stays parallel.
 - Use **table-driven tests** for multi-case logic.
 - Use test helpers (`t.Helper()` + a helper func) to reduce duplication within
   and between tests.
+- **Release resources in helpers with `t.Cleanup`, never `defer`.** A `defer`
+  inside a helper fires when the *helper* returns, not when the test ends — the
+  resource is gone before the test uses it, and the code looks correct.
+  Cleanups run LIFO after the test and its subtests finish.
+- `t.TempDir()` for scratch directories: created per test, removed automatically,
+  unique per parallel subtest.
 - Verify **behavior**, not implementation details.
 
 ```go
@@ -75,6 +121,105 @@ func TestDoThing(t *testing.T) {
 }
 ```
 
+## Testing concurrent code
+
+**Use `testing/synctest` (Go 1.25+) for anything involving time or goroutine
+coordination.** Inside a bubble the `time` package runs on a fake clock that
+advances only when every goroutine in the bubble is blocked, so timeouts,
+tickers, retry/backoff and graceful shutdown become deterministic assertions
+instead of `time.Sleep` guesswork.
+
+```go
+func TestClient_retryBackoff(t *testing.T) {
+    synctest.Test(t, func(t *testing.T) {
+        // time.Sleep / context deadlines inside here are instant and exact.
+        err := client.Do(t.Context(), req)
+        // ...
+    })
+}
+```
+
+`time.Sleep` in a test is a smell: on Go 1.25+ reach for `synctest`; below it,
+inject a clock. Never "fix" a flaky concurrency test by raising a sleep.
+
+**Assert that goroutines actually exit.** Non-negotiable principle 6 says every
+goroutine has an exit condition; make it enforceable rather than aspirational.
+`go.uber.org/goleak` in `TestMain` is the usual way:
+
+```go
+func TestMain(m *testing.M) { goleak.VerifyTestMain(m) }
+```
+
+`synctest` gives this for free inside a bubble: it fails the test if a goroutine
+is still running when the bubble ends.
+
+Run the race detector locally, not only in CI — `go test -race ./...`.
+
+## Fixtures, `testdata/` and golden files
+
+- Test inputs live in **`testdata/`**, which the Go toolchain ignores when
+  building and when matching packages.
+- For output that is large or awkward to write inline (rendered templates,
+  generated code, formatted reports), compare against a **golden file** in
+  `testdata/` and regenerate it behind a flag:
+
+  ```go
+  var update = flag.Bool("update", false, "rewrite golden files")
+
+  func checkGolden(t *testing.T, name string, got []byte) {
+      t.Helper()
+      path := filepath.Join("testdata", name)
+      if *update {
+          if err := os.WriteFile(path, got, 0o644); err != nil {
+              t.Fatalf("write golden: %v", err)
+          }
+          return
+      }
+      want, err := os.ReadFile(path)
+      if err != nil {
+          t.Fatalf("read golden: %v", err)
+      }
+      if !bytes.Equal(got, want) {
+          t.Errorf("output differs from %s (re-run with -update to accept)", path)
+      }
+  }
+  ```
+
+- Review golden-file diffs like source. A golden test whose file is regenerated
+  without reading the diff asserts nothing.
+
+## HTTP adapters
+
+Test inbound HTTP adapters with **`net/http/httptest`** and a mock `port.App` —
+no live listener, no port binding:
+
+- `httptest.NewRequest` + `httptest.NewRecorder` to drive a handler directly.
+- `httptest.NewServer` when the code under test is an outbound *client* and needs
+  a real URL to call.
+
+Assert on status, headers and body shape — the adapter's whole job. Business
+assertions belong in the `app` tests.
+
+## Fuzzing
+
+Anything that parses untrusted input — wire formats, config files, user-supplied
+paths or queries — gets a `FuzzXxx` alongside its unit tests. The seed corpus
+lives in `testdata/fuzz/`, and any crash the fuzzer finds is committed there as a
+regression case.
+
+Fuzzing runs unbounded by default, so it belongs on a schedule (`-fuzztime`), not
+in every PR. Seed-corpus execution still happens on a normal `go test` run, which
+is what keeps found crashes from regressing.
+
+## Coverage
+
+Coverage is a diagnostic, not a target: chasing a percentage produces tests that
+assert nothing. Use it to find what is *not* exercised — an uncovered error branch
+is a real gap, an uncovered generated file is not.
+
+For integration tests that exercise a built binary rather than a package, build
+it with `go build -cover` and collect profiles via `GOCOVERDIR`.
+
 ## Mocking
 
 - **`go.uber.org/mock/mockgen` (gomock)** by default — for interaction-based
@@ -100,7 +245,7 @@ func TestDoThing(t *testing.T) {
 | Layer | Test type | Details |
 |---|---|---|
 | Business logic (`internal/app`) | Unit | Mock all Out ports via gomock. |
-| Inbound adapters (`internal/in/*`) | Unit | Mock `port.App`. |
+| Inbound adapters (`internal/in/*`) | Unit | Mock `port.App`; drive HTTP with `httptest`. |
 | DAL adapter (`internal/dal`) | Integration | Real temporary database (e.g. testcontainers or per-test container). |
 | Other Out adapters (`internal/out/*`) | Integration | Fake or real network services started by the test. |
 | Service as a whole | Smoke | Each external API entrypoint; each subscriber/event-consumer type. |
@@ -114,8 +259,15 @@ func TestDoThing(t *testing.T) {
 - Do not assert on implementation details (private state, internal call order)
   when behavior would do.
 - Do not skip `t.Parallel()` just because it is easier — parallelism catches
-  hidden shared state.
+  hidden shared state. (`t.Setenv`/`t.Chdir` are the exception, not an excuse.)
 - Do not write a single mega-test for a function; split by case via `t.Run`.
+- Do not export identifiers from production files for tests — use
+  `export_test.go` (see [§ Test placement](#test-placement)).
+- Do not `defer` cleanup inside a test helper — it fires too early; use
+  `t.Cleanup`.
+- Do not sleep to synchronize a concurrency test — use `synctest`, or inject a
+  clock. Raising a sleep to stop flakiness hides the bug.
+- Do not chase a coverage percentage.
 
 ---
 
