@@ -46,6 +46,12 @@ is a minimal, runnable skeleton matching the layout the skill mandates.
   `mcp-server`). `game/` is the exception: Ebitengine owns the loop and exits via
   `Update() error`.
 - No `pkg/` directory. Private code under `internal/`; multiple binaries under `cmd/`.
+- `webservice/` carries a **recover middleware** on its inbound HTTP adapter: a
+  panicking handler returns 500 instead of killing the process. (See
+  [engineering-policy.md § `panic` and `recover`](../references/engineering-policy.md).)
+- Adapter tests use `httptest` against a hand-written `port.App` stub — see
+  `webservice/internal/in/http/handler_test.go` and
+  [testing.md](../references/testing.md).
 - Layouts follow [project-layouts.md](../references/project-layouts.md).
 
 ## Source
