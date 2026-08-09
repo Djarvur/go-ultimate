@@ -12,6 +12,7 @@ style/lint guidance for non-architectural Go conventions.
 - [Style and idioms](#style-and-idioms)
 - [`context.Context` — do not alias by default](#contextcontext-do-not-alias-by-default)
 - [Errors — taxonomy and rules](#errors-taxonomy-and-rules)
+- [Outbound HTTP](#outbound-http)
 - [Concurrency](#concurrency)
 - [Constructor pattern — Resolvable Config Struct (not Functional Options)](#constructor-pattern-resolvable-config-struct-not-functional-options)
 - [Naming](#naming)
@@ -140,6 +141,19 @@ and the [Google Go Style Guide](https://google.github.io/styleguide/go/).
   separated by blank lines. `goimports` enforces this.
 - **No dot imports** except in `_test.go` to break circular deps, and only there.
 
+### Generics — when not to
+The skill uses generics deliberately at typed boundaries (see
+[mcp-server.md](mcp-server.md), [agents.md](agents.md)), which makes restraint
+elsewhere worth stating:
+- **Write the concrete version first.** Generalize on the second real caller, not
+  the imagined one.
+- **A one-method interface usually beats a type parameter** when the callee only
+  needs behavior. Reach for generics when the *type relationship* between
+  parameters and results is the point (`func Map[T, U any]([]T, func(T) U) []U`),
+  not to avoid `any`.
+- **Do not parameterize over types that only ever get one instantiation** — that
+  is a struct with extra ceremony.
+
 ### Linting discipline
 - Use `//nolint:lintername` sparingly and **always include a comment justifying
   the exclusion**. A naked `//nolint` is a smell.
@@ -203,6 +217,54 @@ mix. Do not introduce a `Ctx` alias in a project that does not already use one.
   `*MyError`).
 - Errors are values. Do not log and return the same error — log at the top of
   the stack or handle it, not both.
+
+### `panic` and `recover`
+
+- **Panic only on programmer error** — a violated precondition no caller input
+  should be able to reach (a nil dependency that wiring must supply, an
+  impossible switch branch). Expected failures are errors, always.
+- **A panic must never cross a public API boundary.** If a package can panic
+  internally, recover at its edge and return an error.
+- **A long-running server needs a recover middleware** in its inbound adapter:
+  one panicking handler must not take the process down. Log the panic with its
+  stack, return 500, keep serving. `net/http` does recover per connection, but it
+  kills the response silently and logs nothing structured — do it explicitly.
+  See [`assets/webservice/internal/in/http/`](../assets/webservice/internal/in/http/).
+- `recover()` is only meaningful directly inside a deferred function. It does not
+  reach across goroutines: a panic in a goroutine you spawned takes down the
+  process no matter what the spawner deferred.
+
+---
+
+## Outbound HTTP
+
+- **Never use `http.DefaultClient`, `http.Get` or `http.Post` in production
+  code** — they have no timeout, so one hung upstream blocks the caller forever.
+- Construct an explicit client, and bound each call with a context as well. The
+  client timeout is the backstop; the context is the per-request deadline that
+  also propagates cancellation.
+
+```go
+var client = &http.Client{
+    Timeout: 10 * time.Second, // whole exchange: dial + headers + body
+    Transport: &http.Transport{
+        MaxIdleConnsPerHost: 32,       // default 2 — too low for a hot upstream
+        IdleConnTimeout:     90 * time.Second,
+    },
+}
+
+ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
+defer cancel()
+req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+```
+
+- **One shared client per upstream**, stored on the adapter. Building a client
+  per request defeats connection pooling and leaks file descriptors.
+- **Always close and drain the body**: `defer resp.Body.Close()`. A body left
+  unread to EOF cannot return its connection to the pool (`bodyclose` is already
+  in the mandated linter set).
+- Server-side, set `ReadHeaderTimeout` at minimum — a missing one is a trivial
+  slowloris.
 
 ---
 
@@ -344,6 +406,9 @@ APIs where the struct does not fit — rare. Default to the struct.
 - `go test -race ./...` — race detector mandatory.
 - `go mod tidy -diff` (or `go mod tidy && git diff --exit-code go.mod go.sum`) —
   fail CI if modules are not tidy.
+- **`govulncheck ./...`** — Go's official vulnerability scanner, mandatory. It is
+  low-noise because it reports only vulnerabilities actually reachable from your
+  call graph, not every advisory touching your module graph.
 
 ### Dependency policy
 - Pin to the latest minor of each direct dependency; let dependabot/renovate
@@ -361,6 +426,8 @@ jobs:
   lint:
     - go vet ./...
     - golangci-lint run
+  vuln:
+    - govulncheck ./...
   tidy:
     - go mod tidy && git diff --exit-code go.mod go.sum
   build:
@@ -373,6 +440,20 @@ jobs:
 
 - Use `//go:generate` directives to drive generation; do not check in generated
   code without the directive that produced it.
+- **Pin every generator with the `tool` directive** (Go 1.24+), never the old
+  `tools.go` blank-import hack. Without a pin each developer runs a different
+  `mockgen` and the generated code churns from machine to machine — which matters
+  here, because this skill mandates generated mocks for every In/Out port.
+
+  ```console
+  $ go get -tool go.uber.org/mock/mockgen@latest   # records it in go.mod
+  $ go tool mockgen -version                       # runs the pinned version
+  ```
+
+  ```go
+  //go:generate go tool mockgen -destination=mocks/port_mock.go -package=mocks example.com/proj/internal/port App,Repo
+  ```
+
 - **Mocks** — `go.uber.org/mock/mockgen` (see [testing.md](testing.md)).
 - **Wire (DI)** — google/wire for service wiring when the dependency graph grows
   large; otherwise hand-written `wire.go` is fine.
