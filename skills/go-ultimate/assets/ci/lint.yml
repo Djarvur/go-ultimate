@@ -1,0 +1,48 @@
+# golangci-lint workflow — copy to .github/workflows/lint.yml
+#
+# The linter version is pinned on purpose: golangci-lint changes what it reports
+# between minor versions, and an unpinned linter turns unrelated PRs red.
+# Bump it deliberately, as its own commit. See references/repo-and-ci.md.
+name: Lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lint-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  golangci-lint:
+    name: golangci-lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      # golangci-lint-action v7+ is required for v2 version strings. The linter
+      # must be built with a Go version >= the module's `go` directive, or it
+      # refuses to run ("language version used to build golangci-lint is lower
+      # than the targeted Go version").
+      - uses: golangci/golangci-lint-action@v7
+        with:
+          version: v2.12
+
+      # gofmt is not part of the golangci-lint v2 default set; assert it here so
+      # formatting never reaches review.
+      - name: gofmt
+        run: |
+          bad=$(gofmt -l .)
+          if [ -n "$bad" ]; then
+            echo "::error::gofmt would reformat:"
+            echo "$bad"
+            exit 1
+          fi

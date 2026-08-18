@@ -13,7 +13,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, Cursor, Grok Build, GitHub Copilot CLI, OpenCode, and any harness that reads the Agent Skills SKILL.md format. Targets any Go project.
 metadata:
   author: Djarvur
-  version: '0.10.0'
+  version: '0.11.0'
   maintainers:
     - name: Daniel Podolsky
       url: https://github.com/onokonem
@@ -29,6 +29,11 @@ metadata:
     - modelcontextprotocol/go-sdk#design
     - philschmid.de#mcp-best-practices
     - modelcontextprotocol.info#docs/best-practices
+    - google/styleguide#go
+    - uber-go/guide
+    - metalagman/agent-skills#go-senior-developer
+    - metalagman/agent-skills#go-oss-maintainer
+    - metalagman/agent-skills#golangci-lint-strict
   source-notes:
     danicat-skills-deleted: |
       Originally also sourced from danicat/skills#go-best-practices and
@@ -41,14 +46,23 @@ metadata:
     cloudwego-eino-adk-0.1: |
       `adk-0.1` is an in-repo ADK package, not a versioned tag; treated as a
       point-in-time reference, not a recoverable pin.
+    metalagman-unlicensed: |
+      metalagman/agent-skills ships no LICENSE file, so its text is
+      all-rights-reserved by default. Nothing is copied from it verbatim: the
+      rules were extracted and rewritten in this skill's own voice, and the
+      donor is credited in the affected references. Its bulk style-guide
+      documents are derivatives of Google styleguide (CC-BY-3.0) and uber-go/
+      guide (Apache-2.0), which this skill sources directly from upstream
+      instead.
 ---
 
 # Go Ultimate Skill
 
 A single, opinionated skill for writing the best Go programs — synthesized from
-four general-Go skills plus four agent/MCP donors (one donor, eino, contributes
-two documents). Opinions represent the synthesized consensus; where the donors
-disagreed, this skill resolved the conflict per the precedence ladder below.
+four general-Go skills, four agent/MCP donors (one donor, eino, contributes two
+documents), the Google and Uber style guides, and a repository/production-practice
+donor. Opinions represent the synthesized consensus; where the donors disagreed,
+this skill resolved the conflict per the precedence ladder below.
 
 ## When this skill applies
 
@@ -127,6 +141,7 @@ Is the code meant to be imported by other modules?
 Is the code a long-running server (HTTP/gRPC/messaging)?
 ├── Yes → BACKEND SERVICE
 │          → references/architecture.md        (mandatory)
+│          → references/production-readiness.md (mandatory)
 │          → references/project-layouts.md § Service
 │          → references/engineering-policy.md
 │
@@ -134,12 +149,14 @@ Is the code a server exposing tools/resources/prompts to LLMs over MCP?
 ├── Yes → MCP SERVER
 │          → references/mcp-server.md          (mandatory)
 │          → references/project-layouts.md § Service or § CLI (stdio server = CLI-shaped)
+│          → references/production-readiness.md (if hosted/long-running, not stdio)
 │          → references/engineering-policy.md
 │
 Is the code an LLM-driven agent that calls tools / orchestrates multi-step reasoning?
 ├── Yes → AI AGENT
 │          → references/agents.md              (mandatory)
 │          → references/project-layouts.md § CLI or § Service (depends on hosting)
+│          → references/production-readiness.md (if hosted/long-running)
 │          → references/engineering-policy.md
 │
 Is the code a code generator, linter, or analysis tool?
@@ -148,6 +165,11 @@ Is the code a code generator, linter, or analysis tool?
 │
 Otherwise → ask the user to clarify before proposing structure.
 ```
+
+**Regardless of type:** when initializing a repository, adding CI, or reviewing
+repository hygiene, also load
+[references/repo-and-ci.md](references/repo-and-ci.md) — required files, ignore
+baselines, `go tool` pinning, workflow shape, release stamping.
 
 ---
 
@@ -207,6 +229,12 @@ These are the consensus backbone. Every Go file this skill touches obeys them.
 | Libraries: README (rationale + honest comparison + payoff-first quick start) vs `doc.go` (contracts) | [libraries.md](references/libraries.md) |
 | `go.mod`: apps latest, libraries latest-1 | [engineering-policy.md](references/engineering-policy.md) |
 | Lint: `golangci-lint` + `govet` + `go test -race` mandatory in CI | [engineering-policy.md](references/engineering-policy.md) |
+| Naming: `MixedCaps`, initialism case (`userID`, `HTTPClient`), no `Get` prefix, no `util`/`common` package | [engineering-policy.md](references/engineering-policy.md) |
+| `%w` only when the cause is intended as API; `%v` for a dependency's error crossing a public boundary | [engineering-policy.md](references/engineering-policy.md) |
+| No mutable globals; no goroutines or I/O in `init()`; comma-ok on every type assertion | [engineering-policy.md](references/engineering-policy.md) |
+| Fan-out is bounded (`SetLimit`/semaphore); channels unbuffered or size 1 | [engineering-policy.md](references/engineering-policy.md) |
+| Repo must have `LICENSE`, `README.md`, `AGENTS.md`, ignore files, `.golangci.yml`, CI; tools pinned via `go tool` | [repo-and-ci.md](references/repo-and-ci.md) |
+| Services: bounded calls, safe retries, stable error contract, liveness≠readiness, outbox, rolling-safe migrations | [production-readiness.md](references/production-readiness.md) |
 | MCP server: official `go-sdk`, typed tool handlers, two-channel errors, tool design as outcomes-not-operations | [mcp-server.md](references/mcp-server.md) |
 | AI agent: ReAct loop w/ bounded iterations, 6 topology archetypes, type-aligned composition (reject `map[string]any` between nodes) | [agents.md](references/agents.md) |
 
@@ -229,6 +257,17 @@ When two references seem to disagree:
    pagination, middleware) → [mcp-server.md](references/mcp-server.md) wins.
 7. **AI agents in Go** (ReAct loop, multi-agent topology, typed data flow
    between nodes, state externalism) → [agents.md](references/agents.md) wins.
+8. **Runtime behavior of a long-running service** (timeout/retry/idempotency
+   policy, API error contract, liveness vs readiness, metric cardinality,
+   migration safety, outbox) →
+   [production-readiness.md](references/production-readiness.md) wins. It
+   refines rule 3: engineering-policy sets the observability *floor*, this sets
+   the service shape.
+9. **Concrete repository and pipeline files** (required files, ignore baselines,
+   workflow YAML, `go tool` pinning, build stamping) →
+   [repo-and-ci.md](references/repo-and-ci.md) wins. It also refines rule 3:
+   engineering-policy states which gates are mandatory, this states how they are
+   written.
 
 The adapter carve-out ([mcp-server.md](references/mcp-server.md) § "Adapter
 carve-out") refines rule 5 of the non-negotiable principles for MCP handlers

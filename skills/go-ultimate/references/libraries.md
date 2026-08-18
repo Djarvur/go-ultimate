@@ -157,6 +157,32 @@ func Old() *T { ... }
   identifier name.
 - Do not leak internal types through the public API (return error as `error`,
   not as `*internalError`).
+- **Assert interface compliance at compile time** where a type is meant to
+  satisfy an interface it does not name:
+
+  ```go
+  var _ io.ReadCloser = (*Stream)(nil)
+  ```
+
+  Zero cost, no allocation, and it turns "the caller's build broke" into "our
+  build broke" when a method signature drifts.
+- **Never take a pointer to an interface.** `*io.Reader` is almost always a
+  mistake: an interface value is already a reference pair. Use a pointer only for
+  the concrete type, when its methods must mutate it.
+
+### Document what the signature cannot say
+
+A doc comment that restates the signature is noise. These four facts cannot be
+inferred and must be written:
+
+- **Concurrency safety** — "safe for concurrent use by multiple goroutines", or
+  explicitly not. Callers otherwise guess, and guess wrong.
+- **Ownership and cleanup** — who closes what, and whether a returned value
+  aliases internal state. Anything returning an `io.Closer` says when to close it.
+- **Sentinel errors a caller is expected to match**, named in the doc comment of
+  the function that returns them.
+- **Non-obvious parameter constraints** — units, valid ranges, whether nil is
+  allowed and what it means.
 
 ---
 
@@ -173,4 +199,6 @@ func Old() *T { ... }
 
 - [powerman `go-engineering-policy` § Library Documentation](https://github.com/powerman/skills) — README vs `doc.go` split by audience.
 - Semver, major-version layout, public API stability, deprecation rules are ultimate-skill additions.
+- [Uber Go Style Guide](https://github.com/uber-go/guide) (Apache-2.0) — compile-time interface assertion, no pointers to interfaces.
+- [Google Go Best Practices](https://google.github.io/styleguide/go/best-practices) (CC-BY-3.0) — documenting concurrency safety, cleanup ownership, sentinel errors and parameter constraints.
 - Aligned with [engineering-policy.md](engineering-policy.md) (`go.mod` policy, Resolvable Config Struct, "accept interfaces, return structs").

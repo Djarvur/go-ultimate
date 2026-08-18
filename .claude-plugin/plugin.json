@@ -1,8 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-plugin.json",
   "name": "go-ultimate",
-  "description": "Opinionated Go development skill — architecture, conventions, review, and MCP/agent patterns, synthesized from four general-Go skills plus four agent/MCP donors.",
-  "version": "0.10.0",
+  "description": "Opinionated Go development skill — architecture, conventions, production readiness, repo/CI hygiene, review, and MCP/agent patterns.",
+  "version": "0.11.0",
   "author": { "name": "Djarvur" },
   "homepage": "https://github.com/Djarvur/go-ultimate",
   "repository": "https://github.com/Djarvur/go-ultimate",

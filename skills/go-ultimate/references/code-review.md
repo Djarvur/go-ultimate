@@ -60,6 +60,16 @@ architecture evaluation, test-quality checks, or auditing existing code.
 - Small, single-method interfaces preferred.
 - `defer` for resource cleanup.
 - Comments explain *why*, not *what*.
+- **Comma-ok on every type assertion** — a bare `x.(T)` is a panic on unexpected
+  input.
+- **Composite literals name their fields**; positional literals break silently
+  when a field is added upstream.
+- **Slices/maps copied at API boundaries** when stored or returned, or the
+  aliasing is documented.
+- **No mutable package-level state**, and no goroutines or I/O in `init()`.
+- Naming: `MixedCaps`, consistent initialism case (`userID`, `HTTPClient`), no
+  `Get` prefix on accessors, no `util`/`common`/`helpers` package.
+- Struct tags present on anything marshaled.
 
 ### Errors
 - Wrapped at each layer boundary: `fmt.Errorf("doing X: %w", err)`.
@@ -67,6 +77,13 @@ architecture evaluation, test-quality checks, or auditing existing code.
 - `errors.Join` for aggregations (Go 1.20+).
 - No `==` for error comparison.
 - No log-and-return-the-same-error.
+- **`%w` only where the cause is intended as API** — `%v` for a dependency's
+  error crossing a public boundary (see
+  [engineering-policy.md § `%w` vs `%v`](engineering-policy.md)).
+- `error` is the last return; exported functions return the `error` interface,
+  not a concrete type.
+- `os.Exit` / `log.Fatal*` appear only in `main()`.
+- No `failed to` prefixes stacking up through the wrap chain.
 
 ### Concurrency
 - Every goroutine has an exit condition (Context/WaitGroup/done channel).
@@ -78,6 +95,11 @@ architecture evaluation, test-quality checks, or auditing existing code.
 - No goroutine leaks: cancellation propagates, wait groups decrement.
 - No shared mutable state without synchronization; no copied mutexes (`go vet`).
 - `t.Parallel()` in tests to surface hidden shared state.
+- **Fan-out is bounded** — `errgroup.SetLimit`, a worker pool or a semaphore.
+  Ranging over a request-sized slice with `g.Go` is unbounded concurrency.
+- **Channels unbuffered or size 1**; a larger buffer needs a stated reason.
+- Mutex declared as a value field, not embedded, with a comment naming what it
+  guards. Atomics only for a single independent value.
 
 ### Security (when relevant: auth, payments, user input, external APIs)
 - Input validation and sanitization at the boundary.
@@ -125,6 +147,35 @@ architecture evaluation, test-quality checks, or auditing existing code.
 - `internal/` used aggressively for private code.
 - `cmd/<name>/` for multiple binaries; `main.go` at root for single binary.
 - `main()` contains no testable logic — `run(ctx, cfg) error` pattern for CLIs.
+- Required repo files present: `LICENSE`, `README.md`, `AGENTS.md`,
+  `.gitignore`, `.golangci.yml`, CI workflows. See
+  [repo-and-ci.md](repo-and-ci.md).
+- Tools invoked via `go tool` with the `tool` directive in `go.mod`, not
+  `go install` or `tools.go`.
+- CI pins the Go version with `go-version-file: go.mod`, not a hardcoded string.
+
+### Production readiness (long-running services)
+
+Apply when reviewing a service, a hosted MCP server, or an agent runtime. Full
+detail in [production-readiness.md](production-readiness.md).
+
+- **Every outbound call has a context deadline**, not just a client timeout.
+- **Retries are on idempotent operations only**, with exponential backoff +
+  jitter, a cap, and `ctx.Done()` honored. Retries are not stacked at multiple
+  layers.
+- **No raw internal error returned to a client**; domain→transport mapping lives
+  in the adapter, and responses carry a stable `code` plus a `request_id`.
+- **Liveness does not check dependencies**; readiness does, and fails first on
+  shutdown.
+- **Metric and span labels are bounded** — no user id, request id or raw path.
+- **Config is read once at startup**, not via `os.Getenv` deep in the call stack;
+  invalid config fails the process rather than the first request.
+- **Secrets cannot be logged** — redacting `LogValue()`/`String()` on
+  credential-bearing types.
+- **Migrations are rolling-deploy safe** (no rename/drop in the same deploy as
+  the code change).
+- **"DB write + publish event" uses an outbox**, not a best-effort publish after
+  commit.
 
 ---
 
@@ -253,7 +304,11 @@ judgment) `Important`.
 - Review structure (Critical/Important/Suggestion/Positive + What-Why-How) from
   [teetsh-org `golang-code-review`](https://github.com/teetsh-org/claude-skills).
 - Senior review checklist items from [danicat `go-best-practices`](https://github.com/danicat/skills).
-- Review areas aligned with the rules in [engineering-policy.md](engineering-policy.md)
-  and [architecture.md](architecture.md).
+- Review areas aligned with the rules in [engineering-policy.md](engineering-policy.md),
+  [architecture.md](architecture.md), [repo-and-ci.md](repo-and-ci.md) and
+  [production-readiness.md](production-readiness.md).
+- Idiomatic/error/concurrency items added from the [Google](https://google.github.io/styleguide/go/)
+  (CC-BY-3.0) and [Uber](https://github.com/uber-go/guide) (Apache-2.0) style guides;
+  production-readiness items distilled from [metalagman `go-senior-developer`](https://github.com/metalagman/agent-skills).
 - All Teetsh-specific patterns (`school_id`, `pkg/externals/tracker/client.go`,
   `domain/repo/service/handler`, multi-tenancy conventions) deliberately removed.
