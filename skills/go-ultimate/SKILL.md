@@ -43,6 +43,14 @@ metadata:
       project-setup boilerplates live under assets/ (verified to build with
       Go 1.26.x) and the best-practices material is folded into
       references/engineering-policy.md and references/code-review.md.
+    jetbrains-restructured: |
+      JetBrains/go-modern-guidelines restructured on 2026-08-11: the skill moved
+      path and was rewritten from a static per-version markdown catalog into a
+      thin wrapper around a Modern Go Guidelines CLI. The catalog no longer
+      exists upstream as readable markdown, so references/modern-go.md now owns
+      it (same as the danicat material) and new Go releases are folded in by
+      hand. The CLI approach is deliberately not adopted — it would add a runtime
+      dependency on a third-party binary to an otherwise self-contained skill.
     cloudwego-eino-adk-0.1: |
       `adk-0.1` is an in-repo ADK package, not a versioned tag; treated as a
       point-in-time reference, not a recoverable pin.

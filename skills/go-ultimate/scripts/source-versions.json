@@ -12,8 +12,11 @@
     "jetbrains-modern-go": {
       "kind": "github-path",
       "repo": "JetBrains/go-modern-guidelines",
-      "path": "claude/modern-go-guidelines/skills/use-modern-go/SKILL.md",
-      "commit_sha": "3a7f3eecd29f",
+      "path": "plugin/skills/use-modern-go/SKILL.md",
+      "commit_sha": "7b56a40ab86f",
+      "condensed_from_sha": "3a7f3eecd29f",
+      "old_path": "claude/modern-go-guidelines/skills/use-modern-go/SKILL.md",
+      "_note": "Upstream restructured on 2026-08-11: the skill moved from old_path to plugin/skills/use-modern-go/SKILL.md AND was rewritten from a static per-version markdown catalog into a thin wrapper around a Modern Go Guidelines CLI (list/explain subcommands, installed on first use). 198b4e1c8534 is the commit that removed the old path; 7b56a40ab86f is the current head of the new one. The catalog no longer exists upstream as readable markdown, so references/modern-go.md now owns that content (danicat precedent) and new Go releases are folded in by hand. condensed_from_sha records the last revision that still carried the catalog — it is also the permalink cited in references/modern-go.md, since linking the current file would point at material that no longer contains what was condensed. The pin tracks the new path so future changes to the CLI-based skill are still detected, but drift there is no longer a signal to re-condense.",
       "doc_ref": "references/modern-go.md"
     },
     "powerman-bch": {
