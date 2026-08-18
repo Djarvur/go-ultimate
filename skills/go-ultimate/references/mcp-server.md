@@ -14,15 +14,19 @@ This reference wins over generic server/REST guidance for MCP server layout,
 SDK usage, tool-handler design, and the MCP-specific error/pagination/logging
 conventions below.
 
+**Tracks `go-sdk` v1.7.0** (protocol revision `2026-07-28`). Where a rule differs
+between protocol revisions, the revision is named.
+
 ## Contents
 
 - [SDK choice](#sdk-choice)
+- [Protocol revisions and statelessness](#protocol-revisions-and-statelessness)
 - [API-shape rules (from go-sdk `design.md`)](#api-shape-rules-from-go-sdk-designmd)
 - [Auth and context injection — via standard HTTP middleware](#auth-and-context-injection-via-standard-http-middleware)
 - [Typed tool handlers (flagship)](#typed-tool-handlers-flagship)
 - [Two-channel errors](#two-channel-errors)
 - [Tool design discipline (agent-UI, not REST wrapper)](#tool-design-discipline-agent-ui-not-rest-wrapper)
-- [Pagination](#pagination)
+- [Pagination and cacheable lists](#pagination-and-cacheable-lists)
 - [Logging, cancellation, middleware](#logging-cancellation-middleware)
 - [Subscriptions, resources, notifications](#subscriptions-resources-notifications)
 - [Production hardening](#production-hardening)
@@ -43,6 +47,66 @@ contradict this skill's own API-shape guidance (mark3labs uses variadic
 options; the official SDK deliberately does not).
 
 Do not pin a Go MCP SDK in project examples without a one-line rationale.
+
+---
+
+## Protocol revisions and statelessness
+
+The `2026-07-28` revision (shipped in go-sdk v1.7.0) largely rewrote the wire
+protocol. **You do not have to act on most of it** — the SDK negotiates the
+highest mutually-supported revision at connect time and keeps `2025-11-25`
+working — but three consequences change how you build a server.
+
+### 1. Stateless is the new default posture
+
+The `initialize` / `notifications/initialized` handshake is gone. Each request
+carries its own `_meta` (protocol version, client info, capabilities), and a new
+`server/discover` RPC lets a client learn capabilities up front. Resumability
+(`Last-Event-ID`, the standalone GET stream) is removed, as are `ping`,
+`logging/setLevel`, `resources/subscribe` and `resources/unsubscribe`.
+
+**Over streamable HTTP the new revision is only served when you opt in:**
+
+```go
+handler := mcp.NewStreamableHTTPHandler(getServer, &mcp.StreamableHTTPOptions{
+    Stateless: true, // required to serve protocol 2026-07-28
+})
+```
+
+Leave `Stateless` false and clients negotiate down to `2025-11-25` — which works,
+but forfeits the new revision. In stateless mode the server ignores session IDs
+entirely, answers `DELETE` with `405`, and **rejects any server-to-client
+request outright** — there is no session for the client to answer on. That
+restriction is exactly why multi-round-trip requests exist (below).
+
+**Design for statelessness anyway.** A server that keeps per-session state in
+memory cannot scale horizontally behind a load balancer and loses that state on
+every deploy. Put state in the request or in a store — the same
+[state-externalism](agents.md) rule agents follow.
+
+### 2. Server-initiated calls became multi-round-trip requests
+
+Elicitation, sampling and roots are no longer fresh server-to-client JSON-RPC
+requests. A handler instead returns a result carrying `InputRequests` plus an
+opaque `RequestState`; the client fulfils them and **retries the original call**
+with `InputResponses` populated. `CallToolResult.NeedsInput()` reports this case,
+and the SDK ships middleware that handles the exchange transparently in both
+directions, including a shim for legacy clients.
+
+Two implications worth internalizing:
+
+- **A handler can now be called more than once for one logical operation.** Make
+  it idempotent, or carry what it needs in `RequestState`.
+- **`RequestState` crosses the network to an untrusted peer.** The SDK's own
+  documentation is explicit: an unauthenticated server must encrypt, sign and
+  verify it. Treat it as a cookie, not as scratch space.
+
+### 3. Roots, sampling and logging are deprecated
+
+Formally deprecated on this revision (SEP-2577). The Go types remain and stay
+functional for a documented window of **at least twelve months**, so nothing
+breaks — but do not build a new server whose design depends on them. See
+[§ Logging](#logging-cancellation-middleware) for what to do instead.
 
 ---
 
@@ -107,7 +171,9 @@ see [`assets/mcp-server/main.go`](../assets/mcp-server/main.go).
 > document still shows the pre-1.0 shape
 > (`func(ctx, *ServerRequest[*CallToolParamsFor[In]]) (*CallToolResultFor[Out], error)`);
 > those types do not exist in the released `mcp` package. The signature above is
-> the one in v1.6.1.
+> the one in v1.7.0 — **unchanged since v1.6.1**, despite the `2026-07-28`
+> protocol rewrite. The typed-handler surface is the stable part of this SDK;
+> the churn is at the transport and notification layers.
 
 - `mcp.AddTool[In,Out]` **infers `InputSchema` from `In`** (if nil) and
   `OutputSchema` from `Out` (if nil, unless `Out` is `any`); it will not modify
@@ -181,23 +247,55 @@ not a developer user.
 
 ---
 
-## Pagination
+## Pagination and cacheable lists
 
 - **Keyset pagination by default** — unique ID as key, stable sort, opaque
   cursor string. Offset-based only when keyset is impossible.
-- `PageSize` is a `ServerOptions` field; non-negative; zero ⇒ sensible default.
+- `PageSize` is a `ServerOptions` field; non-negative; zero ⇒ `DefaultPageSize`
+  (1000).
 - Expose **`iter.Seq2`** iterator helpers for `List*` methods (auto-pagination
   over the SDK).
 - For agent-facing results, include `has_more`, `next_offset`, `total_count`.
   Never load all results into memory.
 
+### Freshness hints (`2026-07-28`)
+
+List results (`tools/list`, `prompts/list`, `resources/list`,
+`resources/templates/list`, `resources/read`, `server/discover`) embed a
+`Cacheable` struct that clients and intermediaries honour to stop polling:
+
+```go
+type Cacheable struct {
+    TTLMs      int    `json:"ttlMs"`      // 0 ⇒ immediately stale
+    CacheScope string `json:"cacheScope"` // "public" (default) | "private"
+}
+```
+
+- **Set `TTLMs` on list results that are genuinely stable.** A tool list that
+  changes only on deploy should not be re-fetched on every turn.
+- **`cacheScope: "private"` for anything user-scoped.** The default is `public`,
+  which permits a shared intermediary to serve one user's result to another. If
+  the list depends on who is asking, saying so is a security requirement, not an
+  optimization.
+
 ---
 
 ## Logging, cancellation, middleware
 
-- **Logging — `log/slog` bridged to MCP.** Author logs with `log/slog`; the
-  SDK's `slog.Handler` maps levels (Info/Debug/Warn/Error) to MCP logging
-  notifications. Structured attrs: method, duration, client_id, error,
+- **Logging — `log/slog`, but no longer bridged to MCP for new servers.** The
+  MCP logging feature (and `mcp.LoggingHandler`, the SDK's `slog.Handler` that
+  forwarded records as `notifications/message`) is **deprecated as of protocol
+  `2026-07-28`** (SEP-2577). It stays functional for at least twelve months, so
+  existing servers are not broken and may keep using it for older peers.
+
+  For anything new: author logs with `log/slog` as usual and **write them to
+  stderr**, where the host runtime collects them. For a stdio server stderr is
+  the only channel that is not the protocol — writing logs to stdout corrupts
+  the JSON-RPC stream — and for an HTTP server it is the ordinary observability
+  baseline ([engineering-policy.md](engineering-policy.md)). Do not design a
+  server whose only observability path is MCP logging notifications.
+
+  Structured attrs stay the same: method, duration, client_id, error,
   error_type.
 - **Cancellation = transparent context cancellation.** Cancelling the caller's
   context sends `notifications/cancelled` and the call **returns immediately
@@ -217,11 +315,27 @@ not a developer user.
 
 - **`ResourceHandler` returns a `*ReadResourceResult`** (not raw content) for
   forward-spec compatibility.
-- **`SubscribeHandler` and `UnsubscribeHandler` must be supplied together** —
-  providing only one is an error. Both or neither.
 - **Feature-specific notification handlers** (`ToolListChangedHandler`,
   `ResourceListChangedHandler`, …), not a generic `OnNotification`. Type-safe;
-  hides JSON-RPC details.
+  hides JSON-RPC details. This is still the API you write against — what changed
+  underneath is how those notifications reach the client.
+
+### The subscription model changed in `2026-07-28`
+
+- **One `subscriptions/listen` stream replaces free-floating notifications.**
+  `tools/list_changed`, `prompts/list_changed`, `resources/list_changed` and
+  `resources/updated` are no longer separate notifications; they are multiplexed
+  onto a single long-lived stream, each tagged with a subscription id. The SDK
+  opens it automatically on `Client.Connect` when the matching list-changed
+  handler is set, and servers route notifications only to subscribed sessions.
+- **`resources/subscribe` and `resources/unsubscribe` are removed** on this
+  revision and rejected with `MethodNotFound`. `SubscribeHandler` /
+  `UnsubscribeHandler` still exist in `ServerOptions` and still serve older
+  peers, and the **both-or-neither rule still holds** — supplying one without the
+  other panics at `NewServer`, so it is a startup crash, not a runtime surprise.
+- **Do not design a new server around resource subscriptions.** They work only
+  for pre-`2026-07-28` clients. Prefer a tool the agent can call, or the
+  freshness hints in [§ Pagination and cacheable lists](#pagination-and-cacheable-lists).
 
 ---
 
@@ -259,6 +373,14 @@ not a developer user.
   context window.
 - **A generic `OnNotification`** — use feature-specific handlers.
 - **Auth via transport hooks** — use standard HTTP middleware.
+- **Designing a new server around roots, sampling, logging notifications, or
+  resource subscriptions** — all deprecated or removed on protocol
+  `2026-07-28`. They still work for older peers; they are not a foundation.
+- **Per-session in-memory state on an HTTP server** — it blocks horizontal
+  scaling and does not survive a deploy, and stateless mode (required for the
+  new revision) rejects server-to-client requests outright.
+- **Treating `RequestState` as trusted scratch space** — it round-trips through
+  the peer; sign and encrypt it on an unauthenticated server.
 - **Re-inventing `SetTools` / `AddSessionTool`** in wrappers — the SDK
   deliberately omits them.
 - **Raising tool failures as protocol errors** — they belong in
@@ -271,6 +393,12 @@ not a developer user.
 - [go-sdk `design/design.md`](https://github.com/modelcontextprotocol/go-sdk/blob/main/design/design.md) —
   API-shape rules, typed handlers, transport/session split, cancellation,
   middleware, pagination, logging bridge. Natively Go; authoritative.
+- [go-sdk v1.7.0 release notes](https://github.com/modelcontextprotocol/go-sdk/releases/tag/v1.7.0)
+  and the `mcp` package source at that tag — protocol `2026-07-28`:
+  statelessness, `server/discover`, multi-round-trip requests,
+  `subscriptions/listen`, cacheable list results, and the roots/sampling/logging
+  deprecation. Claims in this reference were verified against the tagged source,
+  not the release notes alone.
 - [Phil Schmid — MCP best practices](https://www.philschmid.de/mcp-best-practices) —
   tool design discipline (outcomes-not-operations, flatten args, 5–15 tools,
   naming, curate payloads). Language-agnostic; translated to Go.
