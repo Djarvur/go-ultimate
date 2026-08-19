@@ -1,6 +1,8 @@
 # Modern Go — Version-Gated Syntax
 
-**Source:** condensed from [JetBrains `use-modern-go`](https://github.com/JetBrains/go-modern-guidelines/blob/main/claude/modern-go-guidelines/skills/use-modern-go/SKILL.md).
+**Source:** condensed from [JetBrains `use-modern-go`](https://github.com/JetBrains/go-modern-guidelines/blob/3a7f3eecd29f/claude/modern-go-guidelines/skills/use-modern-go/SKILL.md)
+(permalink to the revision this was condensed from — upstream has since replaced
+the markdown catalog with a CLI; see [§ Source](#source)).
 
 ## Detecting the target version
 
@@ -185,6 +187,27 @@ if pathErr, ok := errors.AsType[*os.PathError](err); ok {
 
 ## Source
 
-This reference condenses the JetBrains `use-modern-go` SKILL.md. The full
-per-version catalog with extensive before/after examples lives upstream:
-https://github.com/JetBrains/go-modern-guidelines/blob/main/claude/modern-go-guidelines/skills/use-modern-go/SKILL.md
+This reference condenses the JetBrains `use-modern-go` SKILL.md as it stood at
+commit [`3a7f3eecd29f`](https://github.com/JetBrains/go-modern-guidelines/blob/3a7f3eecd29f/claude/modern-go-guidelines/skills/use-modern-go/SKILL.md),
+which carried the full per-version catalog with before/after examples inline.
+
+**Upstream restructured on 2026-08-11**: the skill moved to
+[`plugin/skills/use-modern-go/SKILL.md`](https://github.com/JetBrains/go-modern-guidelines/blob/main/plugin/skills/use-modern-go/SKILL.md)
+and was rewritten from a static markdown catalog into a thin wrapper that shells
+out to a Modern Go Guidelines CLI (`list` / `explain` subcommands) which resolves
+guidelines at runtime. **The per-version catalog no longer exists upstream as
+readable markdown.**
+
+Consequences for this skill:
+
+- **The catalog below is now owned and maintained here**, the same way the
+  danicat material is (see SKILL.md `source-notes`). New Go releases must be
+  folded in by hand rather than diffed against upstream.
+- go-ultimate deliberately does **not** adopt the CLI approach: it would add a
+  runtime dependency on a third-party binary to a skill that is otherwise
+  self-contained, and version detection is already covered by the bundled
+  [`scripts/goversion/main.go`](../scripts/goversion/main.go). Revisit only if
+  the catalog becomes too costly to maintain by hand.
+- The upstream pin in
+  [`scripts/source-versions.json`](../scripts/source-versions.json) tracks the
+  new path, so a future change to the CLI-based skill is still detected.

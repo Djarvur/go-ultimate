@@ -12,8 +12,11 @@
     "jetbrains-modern-go": {
       "kind": "github-path",
       "repo": "JetBrains/go-modern-guidelines",
-      "path": "claude/modern-go-guidelines/skills/use-modern-go/SKILL.md",
-      "commit_sha": "3a7f3eecd29f",
+      "path": "plugin/skills/use-modern-go/SKILL.md",
+      "commit_sha": "7b56a40ab86f",
+      "condensed_from_sha": "3a7f3eecd29f",
+      "old_path": "claude/modern-go-guidelines/skills/use-modern-go/SKILL.md",
+      "_note": "Upstream restructured on 2026-08-11: the skill moved from old_path to plugin/skills/use-modern-go/SKILL.md AND was rewritten from a static per-version markdown catalog into a thin wrapper around a Modern Go Guidelines CLI (list/explain subcommands, installed on first use). 198b4e1c8534 is the commit that removed the old path; 7b56a40ab86f is the current head of the new one. The catalog no longer exists upstream as readable markdown, so references/modern-go.md now owns that content (danicat precedent) and new Go releases are folded in by hand. condensed_from_sha records the last revision that still carried the catalog — it is also the permalink cited in references/modern-go.md, since linking the current file would point at material that no longer contains what was condensed. The pin tracks the new path so future changes to the CLI-based skill are still detected, but drift there is no longer a signal to re-condense.",
       "doc_ref": "references/modern-go.md"
     },
     "powerman-bch": {
@@ -35,16 +38,17 @@
     "eino": {
       "kind": "github-tag",
       "repo": "cloudwego/eino",
-      "_note": "Design docs live off-repo on cloudwego.io. Pinned to the latest main-branch SHA at baseline; ADK/orchestration pattern drift detected via tag/release changes. 'adk-0.1' is an in-repo package, not a recoverable tag.",
-      "tag": "v0.9.13",
-      "commit_sha": "ca0441ac0bce",
+      "_note": "Design docs live off-repo on cloudwego.io. Pinned to the tag commit; ADK/orchestration pattern drift detected via tag/release changes. 'adk-0.1' is an in-repo package, not a recoverable tag. Reviewed v0.9.13..v0.9.15 on 2026-08-19: the delta is three ADK-level changes (nil-ctx fix in the summarization middleware #1157, PatchedToolResultGenerator #1168, out-of-range read-offset reporting #1191). references/agents.md teaches orchestration principles — type-aligned composition, read-only input, state-externalism, ReAct, topology archetypes — not eino's API surface, so nothing needed folding in. Pin refreshed to clear the signal.",
+      "tag": "v0.9.15",
+      "commit_sha": "ebd616c8291e",
+      "reviewed_through": "v0.9.15",
       "doc_ref": "references/agents.md"
     },
     "go-sdk": {
       "kind": "github-tag",
       "repo": "modelcontextprotocol/go-sdk",
-      "tag": "v1.6.1",
-      "_note": "v1.7.0-pre.x targets the not-yet-final 2026-07-28 MCP protocol and is additive only; the stable API the skill teaches is unchanged at HEAD.",
+      "tag": "v1.7.0",
+      "_note": "v1.7.0 (2026-07-28) shipped the finalised 2026-07-28 protocol revision: stateless model, server/discover replacing the initialize handshake, multi-round-trip requests replacing server-initiated calls, subscriptions/listen replacing free-floating change notifications, cacheable list results, HTTP header standardisation, and formal deprecation of roots/sampling/logging (SEP-2577, functional for at least twelve months). Backward compatibility with 2025-11-25 is preserved and negotiated at connect time. Reviewed 2026-08-19: the typed-handler API the skill teaches (mcp.AddTool, ToolHandlerFor, two-channel errors) is unchanged — assets/mcp-server/ builds, vets and tests clean against v1.7.0 with no source edits. references/mcp-server.md updated for the logging deprecation, the subscription model change, cacheable list results, and the StreamableHTTPOptions.Stateless requirement.",
       "doc_ref": "references/mcp-server.md, assets/mcp-server/"
     },
     "philschmid-mcp-best-practices": {
