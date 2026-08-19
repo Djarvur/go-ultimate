@@ -35,8 +35,8 @@ jobs:
       run:
         working-directory: skills/go-ultimate/assets/${{ matrix.template }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
           go-version-file: skills/go-ultimate/assets/${{ matrix.template }}/go.mod
           cache-dependency-path: skills/go-ultimate/assets/${{ matrix.template }}/go.sum
@@ -60,7 +60,7 @@ jobs:
           files="go.mod"
           [ -f go.sum ] && files="$files go.sum"
           git diff --exit-code -- $files
-      - uses: golangci/golangci-lint-action@v7
+      - uses: golangci/golangci-lint-action@9fae48acfc02a90574d7c304a1758ef9895495fa # v7
         with:
           # Pin to v2: v1.x is built with Go < 1.26 and cannot lint go 1.26
           # modules ("language version used to build golangci-lint is lower
@@ -74,7 +74,7 @@ jobs:
     name: gofmt
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - run: |
           bad=$(gofmt -l .)
           if [ -n "$bad" ]; then
@@ -88,8 +88,8 @@ jobs:
     name: markdown links
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: lycheeverse/lychee-action@v2
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2
         with:
           # Check relative and remote links in markdown. Skip the installed-plugin
           # cache if present. Fail on any broken link.
@@ -103,6 +103,6 @@ jobs:
     name: version consistency
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - run: |
           bash skills/go-ultimate/scripts/check-version-consistency.sh

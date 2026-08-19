@@ -1,0 +1,20 @@
+# Dependabot keeps the pinned action SHAs and the template modules current.
+# The templates each carry their own go.mod, so gomod is enumerated per
+# template directory rather than at the repo root.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: gomod
+    directories:
+      - "/skills/go-ultimate/assets/cli-simple"
+      - "/skills/go-ultimate/assets/cli-cobra"
+      - "/skills/go-ultimate/assets/game"
+      - "/skills/go-ultimate/assets/library"
+      - "/skills/go-ultimate/assets/mcp-server"
+      - "/skills/go-ultimate/assets/webservice"
+    schedule:
+      interval: weekly
