@@ -1,0 +1,38 @@
+# Paths a host agent should not pull into context or ship inside the plugin
+# bundle. Mirrors .gitignore for build output, and adds local state and secret
+# paths that must never be packaged even if they exist untracked in a work tree.
+
+# OS / editor cruft
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Secrets and local environment — never packaged, never read into context.
+.env
+.env.*
+*.pem
+*.key
+credentials.json
+
+# Go build output. The assets/ templates are built in place, so their binaries
+# land in the work tree; keep them out of the bundle.
+*.test
+*.out
+*.exe
+*.dll
+*.so
+*.dylib
+__debug_bin*
+/skills/go-ultimate/assets/cli-simple/my-tool
+/skills/go-ultimate/assets/cli-cobra/my-cli
+/skills/go-ultimate/assets/webservice/webservice
+/skills/go-ultimate/assets/mcp-server/mcp-server
+/skills/go-ultimate/assets/game/game
+/skills/go-ultimate/scripts/goversion/goversion
+
+# Repo plumbing that carries no value for a host agent reading the skill.
+.git/
+.github/
+.golangci.yml
+.golangci.bck.yml

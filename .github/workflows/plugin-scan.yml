@@ -1,0 +1,35 @@
+# HOL AI Plugin Scanner. Required for the awesome-ai-plugins listing, which
+# checks that this repository runs the scanner action on push or pull_request
+# and then re-scans the repository against the same thresholds:
+# score >= 80/142 with no high or critical findings.
+#
+# The action is pinned to an immutable commit SHA so a moved tag cannot change
+# the code this workflow executes. It needs no secrets and only contents: read.
+name: Plugin Security Scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: plugin-scan-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  scan:
+    name: HOL AI Plugin Scanner
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: hashgraph-online/ai-plugin-scanner-action@55616c962cf86368423f7673b2ecdfdbe613d1af # v1.2.515
+        with:
+          plugin_dir: "."
+          min_score: 80
+          fail_on_severity: high

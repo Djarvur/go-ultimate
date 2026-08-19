@@ -92,9 +92,10 @@ if ok {
 
 ### No mutable globals
 
-A mutable package-level variable is a hidden input to every function that reads
-it: it defeats parallel tests, creates ordering dependencies between packages,
-and makes a function's behavior unreproducible from its arguments.
+A mutable package-level variable is an implicit, undeclared dependency of every
+function that reads it: it defeats parallel tests, creates ordering dependencies
+between packages, and makes a function's behavior unreproducible from its
+arguments.
 
 - **Pass dependencies explicitly** — constructor injection into a struct, not a
   package-level `var`. This is the same rule that makes `wire.go` possible.
