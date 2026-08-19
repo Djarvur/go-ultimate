@@ -121,6 +121,51 @@ func TestDoThing(t *testing.T) {
 }
 ```
 
+## Runnable examples
+
+`Example` functions in the external test package are **tests and documentation at
+once**: `go test` runs them and compares stdout to the `// Output:` comment, and
+`go doc`/pkg.go.dev renders them on the package page. Documentation that cannot
+silently go stale.
+
+```go
+func ExampleClient_Get() {
+    c := api.NewClient(api.Config{})
+    u, _ := c.Get(context.Background(), 1)
+    fmt.Println(u.Name)
+    // Output: Ada
+}
+```
+
+- Naming binds the example to its subject: `Example`, `ExampleT`, `ExampleF`,
+  `ExampleT_M`, plus an optional lowercase suffix (`ExampleClient_Get_notFound`).
+- **An example without an `// Output:` comment is compiled but never run** — it
+  checks nothing. Use `// Unordered output:` when map iteration makes ordering
+  unstable.
+- Every exported package gets at least one example showing the primary use case.
+  For libraries this is mandatory — see [libraries.md](libraries.md).
+
+## Contract tests
+
+When an API is defined by a spec (OpenAPI, AsyncAPI, protobuf), **the spec is the
+test fixture**. Validate real request/response pairs against the schema rather
+than asserting on a hand-written copy of what you believe the spec says.
+
+- Generate the server stubs and clients from the spec — a generated client that
+  compiles is already a compatibility check
+  ([engineering-policy.md § Code generation](engineering-policy.md)).
+- Run consumer/provider checks where a real consumer exists, so a
+  backward-incompatible change fails in your CI rather than theirs.
+- A hand-maintained mirror of the schema inside the tests drifts and then asserts
+  the wrong contract confidently. Point at the spec file itself.
+
+## Benchmarks
+
+`go test -bench=. -benchmem` is the only acceptable evidence for a performance
+claim. Benchmark before and after, and put the diff in the PR description.
+Profiling tooling and when to reach for it are in
+[production-readiness.md § Performance work](production-readiness.md).
+
 ## Testing concurrent code
 
 **Use `testing/synctest` (Go 1.25+) for anything involving time or goroutine
@@ -234,11 +279,29 @@ it with `go build -cover` and collect profiles via `GOCOVERDIR`.
 - Generate mocks for **all In/Out ports** in service architectures (see
   [architecture.md](architecture.md)).
 
-`//go:generate` directive example:
+`//go:generate` directive example — through `go tool` so every machine runs the
+version pinned in `go.mod` (see
+[engineering-policy.md § Code generation](engineering-policy.md)):
 
 ```go
-//go:generate mockgen -destination=mocks/port_mock.go -package=mocks example.com/proj/internal/port App,Repo
+//go:generate go tool mockgen -destination=mocks/port_mock.go -package=mocks example.com/proj/internal/port App,Repo
 ```
+
+### Naming test doubles
+
+A consistent name says what the double *does*, so a reader does not have to open
+it:
+
+- **Package** — append `test` to the package being faked: `creditcardtest`,
+  `storagetest`. It ships beside the real package and is importable by other
+  packages' tests.
+- **Type** — name it for its behavior, not its mechanism: `AlwaysCharges`,
+  `RejectsExpired`, `EmptyStore`. A generic `Stub`/`Fake` is fine when the
+  package holds exactly one.
+- **Variable** — prefix with the double's kind: `spyCC`, `stubClock`, `mockRepo`.
+
+Do not name a double after the interface it implements (`MockPortApp`) and stop
+there — that says how it was generated, not what the test expects of it.
 
 ## Test strategy by layer (services)
 
@@ -274,4 +337,6 @@ it with `go build -cover` and collect profiles via `GOCOVERDIR`.
 ## Sources
 
 - [powerman `go-engineering-policy`](https://github.com/powerman/skills) — testing section, gomock + go-mockgen.
+- [Google Go Best Practices](https://google.github.io/styleguide/go/best-practices) (CC-BY-3.0) — test-double naming (package/type/variable), runnable examples as documentation.
+- [metalagman `go-senior-developer`](https://github.com/metalagman/agent-skills) — contract tests against OpenAPI/AsyncAPI, benchmark discipline (rules extracted, prose rewritten).
 - Assertion-library choice (`vanilla` default, testify as fallback) is this skill's own resolution of a donor disagreement — the donors split on whether to prefer an assertion library.

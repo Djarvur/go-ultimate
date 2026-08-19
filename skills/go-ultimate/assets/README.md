@@ -4,6 +4,9 @@ Copy-paste starting points, one per project type from the
 [decision tree in SKILL.md](../SKILL.md#project-type-decision-tree). Each template
 is a minimal, runnable skeleton matching the layout the skill mandates.
 
+Plus [`ci/`](ci/) — GitHub Actions workflows that apply to any project type,
+independent of the template you start from.
+
 ## How to use
 
 1. Pick the template that matches the project type:
@@ -14,6 +17,8 @@ is a minimal, runnable skeleton matching the layout the skill mandates.
    - [`mcp-server/`](mcp-server/) — MCP server over stdio (typed handlers).
    - [`game/`](game/) — Ebitengine game.
 2. Copy the directory to your new project: `cp -R cli-simple /path/to/my-tool`.
+   Then copy the CI workflows into `.github/workflows/`:
+   `cp ci/test.yml ci/lint.yml /path/to/my-tool/.github/workflows/`.
 3. Find-and-replace the module path `example.com/<name>` with your real module
    (`go mod edit -module github.com/you/my-tool`).
 4. Replace the placeholder name in `main.go` / the package name as appropriate.
@@ -35,6 +40,26 @@ is a minimal, runnable skeleton matching the layout the skill mandates.
 
    Only then report success to the user, with the final tree and the green
    command output.
+
+## CI workflows
+
+[`ci/test.yml`](ci/test.yml) and [`ci/lint.yml`](ci/lint.yml) drop into
+`.github/workflows/` unchanged and implement the gates
+[engineering-policy.md § Dependencies and CI](../references/engineering-policy.md)
+makes mandatory: `build`, `vet`, `test -race -cover`, module tidiness,
+`govulncheck`, `golangci-lint`, `gofmt`.
+
+Two things they do on purpose, explained in
+[repo-and-ci.md](../references/repo-and-ci.md):
+
+- **`go-version-file: go.mod`** — the Go version lives in one place, so CI can
+  never test a different language version than the code declares.
+- **A pinned `golangci-lint` version** — the linter changes what it reports
+  between minor versions; unpinned, it turns unrelated PRs red.
+
+`test.yml` carries a commented-out `compat` matrix job: uncomment it for
+libraries, which must test their whole supported version range, and delete it for
+applications, which ship one version.
 
 ## Rules baked in
 

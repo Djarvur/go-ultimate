@@ -159,9 +159,74 @@ func NewServer(opts ...Option) *Server { ... }
 
 ---
 
+## Eval 6 — production readiness (production-readiness trigger)
+
+**Setup:** a Go service with an outbound adapter that calls a payment API and
+publishes an event after committing to the database.
+
+**Prompt:**
+> "Make this order service production-ready before we launch."
+
+**Expected behavior:**
+- Skill activates and routes to BACKEND SERVICE → loads `production-readiness.md`.
+- Agent flags, at minimum:
+  - **Retry safety** — the payment call is not idempotent, so it needs an
+    idempotency key before any retry is added; backoff must have jitter, a cap,
+    and honor `ctx.Done()`.
+  - **The dual-write bug** — "commit, then publish" loses events. Agent proposes
+    the **outbox** pattern (event written in the same transaction, relayed
+    after), and names at-least-once delivery as the consequence.
+  - **Deadlines** — each outbound call derives its own timeout rather than
+    inheriting the whole request budget.
+  - **Error contract** — internal errors are not returned to the client; domain
+    errors map to transport codes *in the adapter*, with a stable `code` and a
+    `request_id`.
+  - **Liveness vs readiness** — `/healthz` must not check the database;
+    `/readyz` must, and must fail first on shutdown.
+- Agent does **not** propose a specific APM vendor or framework — the reference
+  is vendor-neutral.
+
+**Failure signals:**
+- Agent adds a retry loop around the payment call without raising idempotency.
+- Agent accepts "commit then publish" and only suggests logging the publish
+  failure.
+- Agent puts the domain→HTTP error mapping inside `internal/app`.
+- Agent proposes a liveness probe that pings dependencies.
+
+---
+
+## Eval 7 — repository hygiene (repo-and-ci trigger)
+
+**Setup:** a Go repo with `go.mod`, source, and nothing else — no LICENSE, no CI,
+no `.golangci.yml`.
+
+**Prompt:**
+> "Set this repo up properly before I open-source it."
+
+**Expected behavior:**
+- Skill activates and loads `repo-and-ci.md`.
+- Agent adds the required-file set: `LICENSE` (MIT default), `README.md`,
+  `AGENTS.md`, `.gitignore`, `.dockerignore`, `.golangci.yml`, and workflows
+  under `.github/workflows/`.
+- Workflows use **`go-version-file: go.mod`**, not a hardcoded Go version, and
+  pin the `golangci-lint` version.
+- Agent pins tools with `go get -tool` + `go tool <name>`, not `go install` and
+  not a `tools.go` blank-import file.
+- If a file already exists (e.g. `.gitignore`), agent **merges** the missing
+  baseline patterns instead of overwriting, and says so.
+- Agent may copy [`assets/ci/`](../assets/ci/) directly.
+
+**Failure signals:**
+- Hardcoded `go-version: '1.xx'` in the workflow.
+- `tools.go` with blank imports.
+- An existing `.gitignore` or `.golangci.yml` silently replaced.
+- Agent declares the repo ready with no LICENSE.
+
+---
+
 ## Negative evals — where the skill must NOT activate
 
-The five evals above check **under-triggering** (skill should fire but doesn't).
+The seven evals above check **under-triggering** (skill should fire but doesn't).
 These check **over-triggering**: prompts that look superficially Go-adjacent
 but where this skill has nothing to contribute. The skill must stay dormant —
 no `go run <skill-dir>/scripts/goversion/`, no "as a Go skill I recommend…",

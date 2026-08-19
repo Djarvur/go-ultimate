@@ -1,0 +1,74 @@
+# Go test workflow — copy to .github/workflows/test.yml
+#
+# Gates every push and PR on the skill's mandatory checks:
+#   build, vet, test -race -cover, module tidiness, govulncheck.
+#
+# The Go version comes from go.mod (go-version-file) so it lives in exactly one
+# place. See references/repo-and-ci.md.
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# The default token is over-privileged; grant only what these jobs need.
+permissions:
+  contents: read
+
+concurrency:
+  # Include the event name so a push and a pull_request for the same ref do not
+  # cancel each other.
+  group: test-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - run: go build ./...
+      - run: go vet ./...
+      - run: go test -race -cover ./...
+
+      # Fail if go.mod/go.sum are not tidy. On Go 1.23+ `go mod tidy -diff`
+      # does this without mutating the working tree.
+      - name: modules are tidy
+        run: |
+          go mod tidy
+          git diff --exit-code -- go.mod go.sum
+
+  vuln:
+    name: govulncheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      # Reports only vulnerabilities reachable from this module's call graph,
+      # so it is low-noise enough to gate on.
+      - run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+
+  # Libraries only: test the whole supported version range, not just the floor.
+  # Delete this job for applications, which ship one version.
+  #
+  # compat:
+  #   name: go ${{ matrix.go }}
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       go: ['1.25', '1.26']
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: actions/setup-go@v5
+  #       with:
+  #         go-version: ${{ matrix.go }}
+  #     - run: go test -race ./...

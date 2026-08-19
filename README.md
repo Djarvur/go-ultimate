@@ -1,8 +1,8 @@
 # go-ultimate
 
-A single, opinionated Claude Code skill for writing the best Go programs — synthesized from four general-Go skills plus four agent/MCP donors (one donor contributes two documents). Routes any Go task (CLI, library, backend service, MCP server, AI agent) to the right architecture, conventions, and review checklist. Highly opinionated; overrides generic Go style and lint guidance on conflicts.
+A single, opinionated Claude Code skill for writing the best Go programs — synthesized from four general-Go skills, four agent/MCP donors (one donor contributes two documents), the Google and Uber style guides, and a repository/production-practice donor. Routes any Go task (CLI, library, backend service, MCP server, AI agent) to the right architecture, conventions, and review checklist. Highly opinionated; overrides generic Go style and lint guidance on conflicts.
 
-> **Status:** v0.10.0. Designed for Claude Code, Codex, Cursor, Grok Build, GitHub Copilot CLI, OpenCode, and any harness that reads the Agent Skills `SKILL.md` format. MIT licensed.
+> **Status:** v0.11.0. Designed for Claude Code, Codex, Cursor, Grok Build, GitHub Copilot CLI, OpenCode, and any harness that reads the Agent Skills `SKILL.md` format. MIT licensed.
 
 ## What's inside
 
@@ -11,8 +11,8 @@ The skill lives under [`skills/go-ultimate/`](skills/go-ultimate/) and is struct
 | Path | Purpose |
 |---|---|
 | `skills/go-ultimate/SKILL.md` | The skill itself — when it applies, the non-negotiable principles, the project-type decision tree, conflict precedence. |
-| `skills/go-ultimate/references/` | Deep dives loaded on demand: `architecture.md`, `engineering-policy.md`, `modern-go.md`, `testing.md`, `code-review.md`, `libraries.md`, `project-layouts.md`, `wiring-and-runtime.md`, `modular-monolith.md`, `mcp-server.md`, `agents.md`. |
-| `skills/go-ultimate/assets/` | Scaffolded project templates per type: `cli-simple`, `cli-cobra`, `library`, `game`, `mcp-server`, `webservice` (all `build`, `vet` and `test -race` green). |
+| `skills/go-ultimate/references/` | Deep dives loaded on demand: `architecture.md`, `engineering-policy.md`, `modern-go.md`, `testing.md`, `code-review.md`, `libraries.md`, `project-layouts.md`, `wiring-and-runtime.md`, `modular-monolith.md`, `production-readiness.md`, `repo-and-ci.md`, `mcp-server.md`, `agents.md`. |
+| `skills/go-ultimate/assets/` | Scaffolded project templates per type: `cli-simple`, `cli-cobra`, `library`, `game`, `mcp-server`, `webservice` (all `build`, `vet` and `test -race` green), plus `ci/` workflows. |
 | `skills/go-ultimate/scripts/` | `goversion/main.go` (detects the project's `go.mod` version) and `check-source-versions.sh` + `source-versions.json` (drift checker for upstream donor sources). |
 | `skills/go-ultimate/evals/` | Example prompts and expected behaviors for catching skill drift. |
 
@@ -92,19 +92,25 @@ When triggered, the skill:
 1. Detects the project's Go version (`go run <skill-dir>/scripts/goversion/main.go <project>`) and gates feature usage on it.
 2. Routes the project through a decision tree — script / CLI / library / backend service / MCP server / AI agent — and loads the matching reference.
 3. Applies nine non-negotiable principles (modern version-gated Go, no `pkg/`, context-first, thin adapters, concurrency hygiene, etc.).
-4. Resolves conflicts via an explicit precedence ladder (architecture → modern-go → engineering-policy → libraries → code-review → mcp-server → agents).
+4. Resolves conflicts via an explicit precedence ladder (architecture → modern-go → engineering-policy → libraries → code-review → mcp-server → agents → production-readiness → repo-and-ci).
 
 See the [`SKILL.md`](skills/go-ultimate/SKILL.md) for the full opinionated rule set.
 
 ## Donor sources
 
-The skill synthesizes eight upstream sources. Full attribution and the live pins used to detect upstream drift are in [`skills/go-ultimate/scripts/source-versions.json`](skills/go-ultimate/scripts/source-versions.json). Summary:
+The skill synthesizes thirteen upstream sources. Full attribution and the live pins used to detect upstream drift are in [`skills/go-ultimate/scripts/source-versions.json`](skills/go-ultimate/scripts/source-versions.json). Summary:
 
 **General Go:** `teetsh-org/claude-skills#golang-code-review`, `JetBrains/go-modern-guidelines#use-modern-go`, `powerman/skills#go-bounded-context-hexagonal` (v0.6.0), `powerman/skills#go-engineering-policy` (v0.0.5).
+
+**Style guides:** [`google/styleguide#go`](https://google.github.io/styleguide/go/) (CC-BY-3.0), [`uber-go/guide`](https://github.com/uber-go/guide) (Apache-2.0).
+
+**Repository / production practice:** `metalagman/agent-skills#go-senior-developer`, `#go-oss-maintainer`, `#golangci-lint-strict`.
 
 **Agent / MCP:** `cloudwego/eino#orchestration-design-principles`, `cloudwego/eino#adk-0.1`, `modelcontextprotocol/go-sdk` (v1.6.1), `philschmid.de#mcp-best-practices`, `modelcontextprotocol.info#docs/best-practices`.
 
 > Originally also sourced from `danicat/skills#go-best-practices` and `danicat/skills#go-project-setup`; both were deleted upstream on 2026-07-21. Their distilled content is now owned and maintained by this skill (project-setup boilerplates under `assets/`, best-practices material folded into `references/engineering-policy.md` and `references/code-review.md`).
+
+> `metalagman/agent-skills` ships no LICENSE file, so its text is all-rights-reserved by default. Nothing is copied from it verbatim — the rules were extracted and rewritten, with the donor credited in each affected reference. Its bulk style-guide documents are derivatives of the Google and Uber guides, which this skill pins and attributes directly from upstream instead. Its tool-specific playbooks (`go-fx`, `go-goose`, `go-options-gen`, `go-adk`) are deliberately **not** folded in: they are version-fragile, they contradict this skill's defaults (hand-written wiring over Fx, Resolvable Config Struct over options-gen), and an always-on skill should not carry per-library tutorials.
 
 ### Checking for upstream drift
 

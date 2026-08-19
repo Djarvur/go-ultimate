@@ -1,6 +1,6 @@
 {
   "_comment": "Baseline pins for go-ultimate's donor sources. Used by scripts/check-source-versions.sh to detect upstream drift. Update a pin whenever you fold a change from that donor back into the skill (and bump SKILL.md version). Pin types: commit_sha = last commit touching a GitHub path (kind: github-path); tag = latest stable release/tag (kind: github-tag); manual-review = not auto-checked, records last_reviewed date (kind: manual-review).",
-  "_updated": "2026-07-26",
+  "_updated": "2026-08-19",
   "sources": {
     "teetsh-review": {
       "kind": "github-path",
@@ -64,8 +64,54 @@
       "last_reviewed": "2026-08-06",
       "_note": "Page is undated. Not auto-checked (see philschmid entry). Update last_reviewed after each review.",
       "doc_ref": "references/mcp-server.md"
+    },
+    "google-styleguide-go": {
+      "kind": "github-path",
+      "repo": "google/styleguide",
+      "path": "go",
+      "commit_sha": "c098353acb6d",
+      "license": "CC-BY-3.0",
+      "_note": "Google Go Style Guide + Decisions + Best Practices. Rules folded into engineering-policy (naming form, Least Mechanism, declarations, %w-vs-%v), testing (test-double naming, runnable examples) and libraries (documentation duties). Not vendored verbatim; attribution required by CC-BY.",
+      "doc_ref": "references/engineering-policy.md, references/testing.md, references/libraries.md, references/code-review.md"
+    },
+    "uber-go-guide": {
+      "kind": "github-path",
+      "repo": "uber-go/guide",
+      "path": "style.md",
+      "commit_sha": "37c45b52bf9a",
+      "license": "Apache-2.0",
+      "_note": "Uber Go Style Guide. Rules folded into engineering-policy (comma-ok, channel sizing, init() restrictions, no mutable globals, slice/map copying, mutex discipline) and libraries (compile-time interface assertion, no interface pointers). Deliberately NOT adopted: the `_` prefix for unexported top-level vars, go.uber.org/atomic (superseded by typed sync/atomic), and the 99-char soft line limit (Google's refactor-instead-of-wrap rule wins).",
+      "doc_ref": "references/engineering-policy.md, references/libraries.md, references/code-review.md"
+    },
+    "metalagman-senior-developer": {
+      "kind": "github-path",
+      "repo": "metalagman/agent-skills",
+      "path": "go-senior-developer/SKILL.md",
+      "commit_sha": "c4c55848a628",
+      "license": "NONE — see _license_note",
+      "_note": "Source for references/production-readiness.md (retries/idempotency, API error contract, health endpoints, observability signals, 12-factor selection, migrations/outbox, runbook, profiling) plus bounded concurrency and build stamping. Deliberately NOT adopted: pkg/ for external consumption, uber-go/fx as the DI default, options-gen as the config pattern, Gitflow — all conflict with this skill's mandates.",
+      "doc_ref": "references/production-readiness.md, references/repo-and-ci.md, references/engineering-policy.md, references/testing.md"
+    },
+    "metalagman-oss-maintainer": {
+      "kind": "github-path",
+      "repo": "metalagman/agent-skills",
+      "path": "go-oss-maintainer/SKILL.md",
+      "commit_sha": "4eda551d7bb7",
+      "license": "NONE — see _license_note",
+      "_note": "Source for references/repo-and-ci.md (required-file set, ignore baselines, merge-don't-overwrite rule, go-version-file: go.mod, go tool invocation policy) and assets/ci/.",
+      "doc_ref": "references/repo-and-ci.md, assets/ci/"
+    },
+    "metalagman-golangci-strict": {
+      "kind": "github-path",
+      "repo": "metalagman/agent-skills",
+      "path": "golangci-lint-strict/SKILL.md",
+      "commit_sha": "7dd5ad3c011a",
+      "license": "NONE — see _license_note",
+      "_note": "Source for the opt-in strict-config section of references/repo-and-ci.md (exact-version pinning, do-not-edit-upstream, ask-before-overwrite). The skill's default remains its own explicit linter list, not the strict config.",
+      "doc_ref": "references/repo-and-ci.md"
     }
   },
+  "_license_note": "metalagman/agent-skills ships no LICENSE file, so its text is all-rights-reserved by default. Nothing is copied verbatim: rules were extracted and rewritten in this skill's voice, with the donor credited in each affected reference. Its bulk style-guide documents are derivatives of google/styleguide (CC-BY-3.0) and uber-go/guide (Apache-2.0), which this skill pins and attributes directly from upstream instead. If metalagman adds a permissive licence, this note can be simplified.",
   "no_longer_tracked": {
     "danicat-best-practices": "Deleted upstream 2026-07-21 (commit 201fa420). Content folded into references/engineering-policy.md + references/code-review.md.",
     "danicat-project-setup": "Deleted upstream 2026-07-21 (commit 201fa420). Boilerplates now owned by this skill under assets/."
