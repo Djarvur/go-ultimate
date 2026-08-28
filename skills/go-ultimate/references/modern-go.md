@@ -183,6 +183,41 @@ if pathErr, ok := errors.AsType[*os.PathError](err); ok {
 }
 ```
 
+### Go 1.27+
+
+- **Generic methods.** Type parameters are allowed on methods, so an operation
+  that belongs to a type can live on it instead of becoming a package-level
+  helper. Keep package-level generics for operations that do not belong to one
+  receiver.
+- **`encoding/json/v2`** for *new* JSON code. Leave existing `encoding/json`
+  code alone unless migration is explicitly requested — this is an additive
+  choice for new code, not a rewrite mandate.
+- **Promoted fields in composite literals.** Set an embedded struct's fields
+  directly by their promoted names instead of constructing the embedded value.
+- **`strings.CutLast` / `bytes.CutLast`** instead of `LastIndex` plus manual
+  slicing around the last separator.
+- **Standard-library `uuid`** (RFC 9562) instead of a third-party package or a
+  hand-rolled implementation. Its random component uses a CSPRNG.
+- **`url.URL.Clone` / `url.Values.Clone`** instead of copying by hand.
+
+```go
+// 1.27+
+type Set[T comparable] map[T]struct{}
+
+// Generic method: the operation belongs to the type.
+func (s Set[T]) MapTo[U any](f func(T) U) []U { ... }
+
+// Promoted field set directly; no Item{Base: Base{ID: 7}}.
+type Item struct {
+    Base
+    Name string
+}
+it := Item{ID: 7, Name: "x"}
+
+before, after, found := strings.CutLast("a/b/c", "/") // "a/b", "c", true
+u2 := u.Clone()
+```
+
 ---
 
 ## Source
@@ -195,19 +230,27 @@ which carried the full per-version catalog with before/after examples inline.
 [`plugin/skills/use-modern-go/SKILL.md`](https://github.com/JetBrains/go-modern-guidelines/blob/main/plugin/skills/use-modern-go/SKILL.md)
 and was rewritten from a static markdown catalog into a thin wrapper that shells
 out to a Modern Go Guidelines CLI (`list` / `explain` subcommands) which resolves
-guidelines at runtime. **The per-version catalog no longer exists upstream as
-readable markdown.**
+guidelines at runtime.
+
+**The catalog itself did not disappear — it changed format.** It now lives in
+that repository as structured data at
+[`internal/guidelines/guidelines.json`](https://github.com/JetBrains/go-modern-guidelines/blob/main/internal/guidelines/guidelines.json)
+(one record per guideline: `id`, `since_version`, `guideline`, `details`,
+`examples`), and the repository is Apache-2.0. So it remains **diffable**, just
+not readable as prose.
 
 Consequences for this skill:
 
-- **The catalog below is now owned and maintained here**, the same way the
-  danicat material is (see SKILL.md `source-notes`). New Go releases must be
-  folded in by hand rather than diffed against upstream.
+- **This catalog is maintained here, but checked against upstream.** When a new
+  Go release lands, diff `guidelines.json` by `since_version` against the
+  sections above rather than re-deriving the list from scratch. Entries are
+  adopted only after verifying them against a real toolchain — upstream is a
+  cross-check, not an authority.
 - go-ultimate deliberately does **not** adopt the CLI approach: it would add a
   runtime dependency on a third-party binary to a skill that is otherwise
   self-contained, and version detection is already covered by the bundled
-  [`scripts/goversion/main.go`](../scripts/goversion/main.go). Revisit only if
-  the catalog becomes too costly to maintain by hand.
+  [`scripts/goversion/main.go`](../scripts/goversion/main.go).
 - The upstream pin in
-  [`scripts/source-versions.json`](../scripts/source-versions.json) tracks the
-  new path, so a future change to the CLI-based skill is still detected.
+  [`scripts/source-versions.json`](../scripts/source-versions.json) tracks
+  `guidelines.json` rather than the wrapper `SKILL.md`, so drift fires when the
+  *guidelines* change and stays quiet on plugin version bumps.

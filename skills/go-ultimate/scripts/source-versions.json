@@ -1,6 +1,6 @@
 {
   "_comment": "Baseline pins for go-ultimate's donor sources. Used by scripts/check-source-versions.sh to detect upstream drift. Update a pin whenever you fold a change from that donor back into the skill (and bump SKILL.md version). Pin types: commit_sha = last commit touching a GitHub path (kind: github-path); tag = latest stable release/tag (kind: github-tag); manual-review = not auto-checked, records last_reviewed date (kind: manual-review).",
-  "_updated": "2026-08-19",
+  "_updated": "2026-08-28",
   "sources": {
     "teetsh-review": {
       "kind": "github-path",
@@ -12,11 +12,14 @@
     "jetbrains-modern-go": {
       "kind": "github-path",
       "repo": "JetBrains/go-modern-guidelines",
-      "path": "plugin/skills/use-modern-go/SKILL.md",
-      "commit_sha": "7b56a40ab86f",
+      "path": "internal/guidelines/guidelines.json",
+      "commit_sha": "937827b86eef",
       "condensed_from_sha": "3a7f3eecd29f",
+      "license": "Apache-2.0",
       "old_path": "claude/modern-go-guidelines/skills/use-modern-go/SKILL.md",
-      "_note": "Upstream restructured on 2026-08-11: the skill moved from old_path to plugin/skills/use-modern-go/SKILL.md AND was rewritten from a static per-version markdown catalog into a thin wrapper around a Modern Go Guidelines CLI (list/explain subcommands, installed on first use). 198b4e1c8534 is the commit that removed the old path; 7b56a40ab86f is the current head of the new one. The catalog no longer exists upstream as readable markdown, so references/modern-go.md now owns that content (danicat precedent) and new Go releases are folded in by hand. condensed_from_sha records the last revision that still carried the catalog — it is also the permalink cited in references/modern-go.md, since linking the current file would point at material that no longer contains what was condensed. The pin tracks the new path so future changes to the CLI-based skill are still detected, but drift there is no longer a signal to re-condense.",
+      "previous_path": "plugin/skills/use-modern-go/SKILL.md",
+      "reviewed_through": "Go 1.27 guidelines (54 entries)",
+      "_note": "Upstream restructured on 2026-08-11: the skill moved from old_path to previous_path AND was rewritten from a static per-version markdown catalog into a thin wrapper around a Modern Go Guidelines CLI (list/explain). Correction to the earlier note here: the catalog did not disappear, it changed format — it lives at internal/guidelines/guidelines.json (54 records: id, since_version, guideline, details, examples) and the repo is Apache-2.0, so it stays diffable, just not readable as prose. The pin therefore tracks guidelines.json rather than the wrapper SKILL.md: drift now fires when the guidelines change and stays quiet on plugin version bumps (the 2026-08-19 bump to 1.1.1 was pure noise under the old pin). references/modern-go.md still owns its catalog and is checked against this file by since_version; entries are adopted only after verifying them against a real toolchain. Reviewed 2026-08-28: diffed all 54 entries, found six Go 1.27 guidelines absent from modern-go.md (generic methods, encoding/json/v2, promoted field literals, strings/bytes.CutLast, stdlib uuid, url Clone) — all six verified by compiling against go1.27.0 and folded in.",
       "doc_ref": "references/modern-go.md"
     },
     "powerman-bch": {

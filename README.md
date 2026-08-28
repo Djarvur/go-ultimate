@@ -2,7 +2,7 @@
 
 A single, opinionated AI agent skill for writing the best Go programs — synthesized from four general-Go skills, four agent/MCP donors (one donor contributes two documents), the Google and Uber style guides, and a repository/production-practice donor. Routes any Go task (CLI, library, backend service, MCP server, AI agent) to the right architecture, conventions, and review checklist. Highly opinionated; overrides generic Go style and lint guidance on conflicts.
 
-> **Status:** v0.11.0. Designed for Claude Code, Codex, Cursor, Grok Build, GitHub Copilot CLI, OpenCode, and any harness that reads the Agent Skills `SKILL.md` format. MIT licensed.
+> **Status:** v0.12.0. Designed for Claude Code, Codex, Cursor, Grok Build, GitHub Copilot CLI, OpenCode, and any harness that reads the Agent Skills `SKILL.md` format. MIT licensed.
 
 ## What's inside
 
@@ -106,7 +106,7 @@ The skill synthesizes thirteen upstream sources. Full attribution and the live p
 
 **Repository / production practice:** `metalagman/agent-skills#go-senior-developer`, `#go-oss-maintainer`, `#golangci-lint-strict`.
 
-**Agent / MCP:** `cloudwego/eino#orchestration-design-principles`, `cloudwego/eino#adk-0.1`, `modelcontextprotocol/go-sdk` (v1.6.1), `philschmid.de#mcp-best-practices`, `modelcontextprotocol.info#docs/best-practices`.
+**Agent / MCP:** `cloudwego/eino#orchestration-design-principles`, `cloudwego/eino#adk-0.1`, `modelcontextprotocol/go-sdk` (v1.7.0), `philschmid.de#mcp-best-practices`, `modelcontextprotocol.info#docs/best-practices`.
 
 > Originally also sourced from `danicat/skills#go-best-practices` and `danicat/skills#go-project-setup`; both were deleted upstream on 2026-07-21. Their distilled content is now owned and maintained by this skill (project-setup boilerplates under `assets/`, best-practices material folded into `references/engineering-policy.md` and `references/code-review.md`).
 

@@ -62,11 +62,14 @@ jobs:
           git diff --exit-code -- $files
       - uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
         with:
-          # Pin to v2: v1.x is built with Go < 1.26 and cannot lint go 1.26
-          # modules ("language version used to build golangci-lint is lower
-          # than the targeted Go version"). v2.9.0+ is built with Go 1.26.
+          # The linter must be built with a Go version >= the module's `go`
+          # directive, or it refuses to run ("language version used to build
+          # golangci-lint is lower than the targeted Go version"). The app
+          # templates target go 1.27, and go1.27 support landed in v2.13.0
+          # (#6642) — v2.12 cannot lint them. Bump this whenever the templates
+          # move to a new Go release.
           # Requires golangci-lint-action v7+ (v6 rejects v2 version strings).
-          version: v2.12
+          version: v2.13
           working-directory: skills/go-ultimate/assets/${{ matrix.template }}
 
   # Repo-wide: gofmt clean across all .go files.
