@@ -34,7 +34,9 @@ jobs:
       # than the targeted Go version").
       - uses: golangci/golangci-lint-action@v7
         with:
-          version: v2.12
+          # go1.27 support landed in golangci-lint v2.13.0; a module with a
+          # newer `go` directive than the linter's own build needs a newer pin.
+          version: v2.13
 
       # gofmt is not part of the golangci-lint v2 default set; assert it here so
       # formatting never reaches review.

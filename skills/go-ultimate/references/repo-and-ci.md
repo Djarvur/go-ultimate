@@ -207,7 +207,7 @@ with, and own.
 ```
 
 `go-version-file` means the version lives in exactly one place. A hardcoded
-`go-version: '1.25'` in the workflow silently diverges from `go.mod` the first
+`go-version: '1.26'` in the workflow silently diverges from `go.mod` the first
 time someone bumps one and not the other, and then CI is testing a different
 language version than the code declares.
 
@@ -252,7 +252,7 @@ jobs:
           go-version-file: go.mod
       - uses: golangci/golangci-lint-action@v7
         with:
-          version: v2.12   # pinned on purpose
+          version: v2.13   # pinned on purpose
 
   vuln:
     runs-on: ubuntu-latest
@@ -288,7 +288,7 @@ it claims to support — at minimum the `go.mod` floor and the current release:
 ```yaml
 strategy:
   matrix:
-    go: ['1.25', '1.26']
+    go: ['1.26', '1.27']
 ```
 
 See [engineering-policy.md § `go.mod` version policy](engineering-policy.md) for
@@ -349,7 +349,7 @@ Use a **multi-stage build**. The final image contains the binary and its
 runtime dependencies, nothing else — no toolchain, no source, no module cache.
 
 ```dockerfile
-FROM golang:1.26 AS build
+FROM golang:1.27 AS build
 WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download

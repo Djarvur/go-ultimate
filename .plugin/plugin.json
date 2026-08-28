@@ -1,7 +1,7 @@
 {
   "name": "go-ultimate",
   "displayName": "Go Ultimate",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "description": "Opinionated Go development skill — architecture, conventions, review, and MCP/agent patterns.",
   "author": {
     "name": "Djarvur",
