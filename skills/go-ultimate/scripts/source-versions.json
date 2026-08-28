@@ -38,10 +38,10 @@
     "eino": {
       "kind": "github-tag",
       "repo": "cloudwego/eino",
-      "_note": "Design docs live off-repo on cloudwego.io. Pinned to the tag commit; ADK/orchestration pattern drift detected via tag/release changes. 'adk-0.1' is an in-repo package, not a recoverable tag. Reviewed v0.9.13..v0.9.15 on 2026-08-19: the delta is three ADK-level changes (nil-ctx fix in the summarization middleware #1157, PatchedToolResultGenerator #1168, out-of-range read-offset reporting #1191). references/agents.md teaches orchestration principles — type-aligned composition, read-only input, state-externalism, ReAct, topology archetypes — not eino's API surface, so nothing needed folding in. Pin refreshed to clear the signal.",
-      "tag": "v0.9.15",
-      "commit_sha": "ebd616c8291e",
-      "reviewed_through": "v0.9.15",
+      "_note": "Design docs live off-repo on cloudwego.io. Pinned to the tag commit; ADK/orchestration pattern drift detected via tag/release changes. 'adk-0.1' is an in-repo package, not a recoverable tag. Reviewed v0.9.13..v0.9.15 on 2026-08-19: the delta is three ADK-level changes (nil-ctx fix in the summarization middleware #1157, PatchedToolResultGenerator #1168, out-of-range read-offset reporting #1191). references/agents.md teaches orchestration principles — type-aligned composition, read-only input, state-externalism, ReAct, topology archetypes — not eino's API surface, so nothing needed folding in. Pin refreshed to clear the signal. Reviewed v0.9.15..v0.9.17 on 2026-08-28: two internal compose-package bugfixes for nested-stream and boundary checkpoint converters (#1225, #1226). agents.md teaches the Interrupt/Resume principle (a small pluggable store, decoupled from the agent), not eino's checkpoint stream internals, so again nothing to fold in.",
+      "tag": "v0.9.17",
+      "commit_sha": "0e01b2a4e305",
+      "reviewed_through": "v0.9.17",
       "doc_ref": "references/agents.md"
     },
     "go-sdk": {
