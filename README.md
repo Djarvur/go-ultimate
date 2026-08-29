@@ -39,7 +39,7 @@ Invoke with `$go-ultimate:go-ultimate`.
 ### Cursor
 
 ```bash
-agent plugin marketplace add https://github.com/Djarvur/cc-mplace.git
+agent plugin marketplace add https://github.com/Djarvur/go-ultimate.git --git-ref v0.12.0
 ```
 
 Then install go-ultimate from the Cursor marketplace UI.
