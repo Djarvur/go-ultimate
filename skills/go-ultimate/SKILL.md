@@ -13,7 +13,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, Cursor, Grok Build, GitHub Copilot CLI, OpenCode, and any harness that reads the Agent Skills SKILL.md format. Targets any Go project.
 metadata:
   author: Djarvur
-  version: '0.12.0'
+  version: '0.13.0'
   maintainers:
     - name: Daniel Podolsky
       url: https://github.com/onokonem
