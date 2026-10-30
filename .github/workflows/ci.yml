@@ -66,10 +66,15 @@ jobs:
           # directive, or it refuses to run ("language version used to build
           # golangci-lint is lower than the targeted Go version"). The app
           # templates target go 1.27, and go1.27 support landed in v2.13.0
-          # (#6642) — v2.12 cannot lint them. Bump this whenever the templates
-          # move to a new Go release.
+          # (#6642) — v2.12 cannot lint them.
+          #
+          # The release binary must also read the toolchain's export data:
+          # Go 1.27.2+ writes export data v5, which v2.13.x (x/tools v0.49)
+          # cannot decode ("export data version 5 is greater than maximum
+          # supported version 4"); v2.14.0+ (x/tools v0.50) reads it.
           # Requires golangci-lint-action v7+ (v6 rejects v2 version strings).
-          version: v2.13
+          # Bump whenever the templates move to a new Go release.
+          version: v2.15
           working-directory: skills/go-ultimate/assets/${{ matrix.template }}
 
   # Repo-wide: gofmt clean across all .go files.
