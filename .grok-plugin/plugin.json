@@ -2,8 +2,8 @@
   "$schema": "https://json.schemastore.org/grok-plugin.json",
   "name": "go-ultimate",
   "displayName": "Go Ultimate",
-  "version": "0.14.0",
-  "description": "Opinionated Go development skill — architecture, conventions, review, and MCP/agent patterns.",
+  "version": "0.15.0",
+  "description": "Opinionated Go development skill — architecture, conventions, production readiness, repo/CI hygiene, review, and MCP/agent patterns — plus six language-agnostic companion skills: ponytail minimal-change mode, ponytail-review, ponytail-audit, pr-simplify, test-audit, technical-documentation.",
   "author": {
     "name": "Djarvur",
     "url": "https://github.com/Djarvur"
@@ -11,6 +11,13 @@
   "homepage": "https://github.com/Djarvur/go-ultimate",
   "repository": "https://github.com/Djarvur/go-ultimate",
   "license": "MIT",
-  "keywords": ["go", "golang", "skill", "code-review", "mcp", "agent"],
+  "keywords": [
+    "go",
+    "golang",
+    "skill",
+    "code-review",
+    "mcp",
+    "agent"
+  ],
   "skills": "./skills/"
 }

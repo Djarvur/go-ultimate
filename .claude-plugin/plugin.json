@@ -1,11 +1,20 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-plugin.json",
   "name": "go-ultimate",
-  "description": "Opinionated Go development skill — architecture, conventions, production readiness, repo/CI hygiene, review, and MCP/agent patterns.",
-  "version": "0.14.0",
-  "author": { "name": "Djarvur" },
+  "description": "Opinionated Go development skill — architecture, conventions, production readiness, repo/CI hygiene, review, and MCP/agent patterns — plus six language-agnostic companion skills: ponytail minimal-change mode, ponytail-review, ponytail-audit, pr-simplify, test-audit, technical-documentation.",
+  "version": "0.15.0",
+  "author": {
+    "name": "Djarvur"
+  },
   "homepage": "https://github.com/Djarvur/go-ultimate",
   "repository": "https://github.com/Djarvur/go-ultimate",
   "license": "MIT",
-  "keywords": ["go", "golang", "skill", "code-review", "mcp", "agent"]
+  "keywords": [
+    "go",
+    "golang",
+    "skill",
+    "code-review",
+    "mcp",
+    "agent"
+  ]
 }
