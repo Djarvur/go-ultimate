@@ -101,9 +101,13 @@ jobs:
         with:
           # Check relative and remote links in markdown. Skip the installed-plugin
           # cache if present. Fail on any broken link.
+          #
+          # substack.com 403s non-browser agents (bot protection) — the link is
+          # alive; excluded rather than deleted.
           args: >-
             --no-progress
             --root-dir ${{ github.workspace }}
+            --exclude 'https://cobusgreyling\.substack\.com/.*'
             '*.md' '**/*.md'
 
   # Repo-wide: the version must be identical in plugin.json, SKILL.md, README.md.
