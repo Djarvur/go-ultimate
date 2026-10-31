@@ -2,7 +2,7 @@
 
 A single, opinionated AI agent skill for writing the best Go programs — synthesized from four general-Go skills, four agent/MCP donors (one donor contributes two documents), the Google and Uber style guides, and a repository/production-practice donor. Routes any Go task (CLI, library, backend service, MCP server, AI agent) to the right architecture, conventions, and review checklist. Highly opinionated; overrides generic Go style and lint guidance on conflicts.
 
-> **Status:** v0.14.0. Designed for Claude Code, Codex, Cursor, Grok Build, GitHub Copilot CLI, OpenCode, Hermes Agent, ZCode, and any harness that reads the Agent Skills `SKILL.md` format. MIT licensed.
+> **Status:** v0.15.0. Designed for Claude Code, Codex, Cursor, Grok Build, GitHub Copilot CLI, OpenCode, Hermes Agent, ZCode, and any harness that reads the Agent Skills `SKILL.md` format. MIT licensed.
 
 ## What's inside
 
@@ -41,7 +41,7 @@ Invoke with `$go-ultimate:go-ultimate`.
 ### Cursor
 
 ```bash
-agent plugin marketplace add https://github.com/Djarvur/go-ultimate.git --git-ref v0.14.0
+agent plugin marketplace add https://github.com/Djarvur/go-ultimate.git --git-ref v0.15.0
 ```
 
 Then install go-ultimate from the Cursor marketplace UI.
@@ -89,7 +89,7 @@ or copy/symlink the skill directories into `~/.zcode/skills/`.
 Hermes installs skills from GitHub repos. One-off:
 
 ```bash
-hermes skills install https://raw.githubusercontent.com/Djarvur/go-ultimate/v0.14.0/skills/go-ultimate/SKILL.md
+hermes skills install https://raw.githubusercontent.com/Djarvur/go-ultimate/v0.15.0/skills/go-ultimate/SKILL.md
 ```
 
 or add the repo as a tap so the vendored skills are browsable and updatable:

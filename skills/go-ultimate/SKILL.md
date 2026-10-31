@@ -6,14 +6,17 @@ description: >
   files. Use whenever the user mentions Go, Golang, go.mod, a Go package, or asks to
   build a Go backend service, CLI, library, script, MCP server (Model Context Protocol),
   or AI/LLM agent with tool calling or ReAct-style reasoning. Routes by project type to
-  the right architecture, conventions, and review checklist. Highly opinionated;
+  the right architecture, conventions, and review checklist. Also gates six
+  language-agnostic companion skills (ponytail minimal-change mode, ponytail-review,
+  ponytail-audit, pr-simplify, test-audit, technical-documentation) that refine change
+  size, test proof, review/audit output and docs for Go work. Highly opinionated;
   overrides generic Go style and lint guidance on conflicts.
 user-invocable: true
 license: MIT
 compatibility: Designed for Claude Code, Codex, Cursor, Grok Build, GitHub Copilot CLI, OpenCode, and any harness that reads the Agent Skills SKILL.md format. Targets any Go project.
 metadata:
   author: Djarvur
-  version: '0.14.0'
+  version: '0.15.0'
   maintainers:
     - name: Daniel Podolsky
       url: https://github.com/onokonem
@@ -127,6 +130,9 @@ root differently; use the row matching yours:
    matching reference.
 3. **Follow the non-negotiable principles** below — these always apply.
 4. **On conflicts** between references, apply the precedence rules at the end.
+5. **Beyond Go code itself**, this package ships six language-agnostic
+   community skills as sibling directories — see [Companion skills](#companion-skills)
+   below for when each one loads.
 
 ---
 
@@ -222,6 +228,21 @@ These are the consensus backbone. Every Go file this skill touches obeys them.
    [references/mcp-server.md](references/mcp-server.md) and
    [references/agents.md](references/agents.md).
 
+10. **Smallest complete change.** Every Go change obeys the ponytail
+    discipline ([../../ponytail/SKILL.md](../ponytail/SKILL.md)): YAGNI,
+    stdlib before a new dependency, no unrequested abstractions, shortest
+    working diff that still reaches every caller, test and fixture the change
+    breaks; a `shortcut:` comment marks every deliberate limit. On conflicts,
+    a change that adds code this skill would reject is wrong even if it works.
+
+11. **Proof is earned, not accumulated.** New tests pass the test-audit
+    authoring gate ([../../test-audit/SKILL.md](../test-audit/SKILL.md)):
+    protected observable behavior, a credible regression, one primary owner at
+    the strongest boundary — no duplicate, implementation-coupled or
+    test-only-seam proof. Every deliberate scope limit in Go code gets a
+    `shortcut:` comment so [../../ponytail-audit/SKILL.md](../ponytail-audit/SKILL.md)
+    can surface it later.
+
 ---
 
 ## Quick reference (top rules, with link to detail)
@@ -249,6 +270,15 @@ These are the consensus backbone. Every Go file this skill touches obeys them.
 | Services: bounded calls, safe retries, stable error contract, liveness≠readiness, outbox, rolling-safe migrations | [production-readiness.md](references/production-readiness.md) |
 | MCP server: official `go-sdk`, typed tool handlers, two-channel errors, tool design as outcomes-not-operations | [mcp-server.md](references/mcp-server.md) |
 | AI agent: ReAct loop w/ bounded iterations, 6 topology archetypes, type-aligned composition (reject `map[string]any` between nodes) | [agents.md](references/agents.md) |
+| Every Go change: smallest complete fix (YAGNI, stdlib-first, no speculative abstraction), limit marked `shortcut:` | [../../ponytail/SKILL.md](../ponytail/SKILL.md) |
+| New/changed tests: pass the authoring gate — behavior, credible regression, one owner, no test-only seams | [../../test-audit/SKILL.md](../test-audit/SKILL.md) |
+| Before opening a PR: re-derive the smallest complete fix, cut hunks that serve another goal, >800 changed lines = stage it | [../../pr-simplify/SKILL.md](../pr-simplify/SKILL.md) |
+| Review request: read the connected code, findings grouped must/should/nice, every finding has a concrete case and a price | [../../ponytail-review/SKILL.md](../ponytail-review/SKILL.md) |
+| "Audit this repo": map flows + expected load first, ranked findings max 20, lean class, verdict + Not-checked | [../../ponytail-audit/SKILL.md](../ponytail-audit/SKILL.md) |
+| Docs or AGENTS.md/CLAUDE.md work: build/review × brownfield/evergreen, AGENTS.md canonical, aliases as compatibility surfaces | [../../technical-documentation/SKILL.md](../technical-documentation/SKILL.md) |
+
+These last rows route to the package's companion skills, which live outside
+`references/` — see [Companion skills](#companion-skills).
 
 ---
 
@@ -280,6 +310,15 @@ When two references seem to disagree:
    [repo-and-ci.md](references/repo-and-ci.md) wins. It also refines rule 3:
    engineering-policy states which gates are mandatory, this states how they are
    written.
+10. **Change discipline, test proof, review and audit output** (smallest-change
+    rules, test authoring/retention, PR simplification, review and audit report
+    shape) → the matching companion skill wins over any overlapping Go-side
+    guidance: [../../ponytail/SKILL.md](../ponytail/SKILL.md),
+    [../../ponytail-review/SKILL.md](../ponytail-review/SKILL.md),
+    [../../ponytail-audit/SKILL.md](../ponytail-audit/SKILL.md),
+    [../../pr-simplify/SKILL.md](../pr-simplify/SKILL.md),
+    [../../test-audit/SKILL.md](../test-audit/SKILL.md),
+    [../../technical-documentation/SKILL.md](../technical-documentation/SKILL.md).
 
 The adapter carve-out ([mcp-server.md](references/mcp-server.md) § "Adapter
 carve-out") refines rule 5 of the non-negotiable principles for MCP handlers
@@ -304,6 +343,31 @@ If (1) and (2) are silent and the skill's rule feels wrong for the project,
 **say so out loud before applying it** — propose the deviation, name the rule it
 contradicts, and let the user decide. Do not silently override the skill, and do
 not silently apply it when a project file arguably contradicts it.
+
+## Companion skills
+
+This package ships six language-agnostic community skills as sibling
+directories of `skills/go-ultimate/`. They apply to **any** language, they
+load on their own triggers (not only Go work), and relative links from this
+file reach them via `../../<name>/SKILL.md`. Provenance, licenses and every
+deviation from upstream: [`UPSTREAM.md`](../../UPSTREAM.md) at the repo
+root.
+
+| Skill | Loads when | What it adds |
+|---|---|---|
+| [ponytail](../ponytail/SKILL.md) | any coding task; "ponytail", "be lazy", "yagni", over-engineering complaints | The smallest complete change: YAGNI, stdlib-first, no unrequested abstraction, shortest working diff; levels lite/full/ultra. Principle 10. |
+| [ponytail-review](../ponytail-review/SKILL.md) | "review this", "review my PR", "is this over-engineered" | Change review: bugs → risk → scale → missing tests → speed → lean; must/should/nice groups, Ship verdict, explicit Not-checked. |
+| [ponytail-audit](../ponytail-audit/SKILL.md) | "audit this repo", "find bloat", "what can I delete" | Whole-repo audit: flow/load map, ranked findings (max 20), lean class, health verdict. Reads `shortcut:` markers (principle 11). |
+| [pr-simplify](../pr-simplify/SKILL.md) | before opening a PR or pushing large repairs | Author-side diff simplification: re-derive the smallest fix, drop hunks that serve another goal, stage >800-line changes. |
+| [test-audit](../test-audit/SKILL.md) | writing, changing, reviewing or pruning tests | Authoring gate + junk-pattern/retention bars; `CAMPAIGN.md` playbook for whole-subsystem pruning. Principle 11. |
+| [technical-documentation](../technical-documentation/SKILL.md) | docs work, AGENTS.md/CLAUDE.md/README audit or authoring | Build/review × brownfield/evergreen docs, AGENTS.md-canonical alias policy, agent-file drift diagnosis. |
+
+**Trigger overlap:** a Go task fires this skill first; these companions refine
+the non-Go aspects of the same work — change size (ponytail, pr-simplify),
+test proof (test-audit), report shape (ponytail-review, ponytail-audit), docs
+(technical-documentation). Within those aspects the companion wins
+(precedence rule 10). Each companion is self-contained: a harness that lists
+sibling skills individually may also invoke them directly.
 
 ## Verification
 
