@@ -41,7 +41,7 @@ Source: https://github.blog/ai-and-ml/github-copilot/how-to-write-a-great-agents
 ## Context-awareness by agent platform
 
 Source: https://github.com/vercel-labs/agent-skills/blob/main/AGENTS.md
-Source: https://github.com/openai/codex/blob/main/AGENTS.md
+Source: https://github.com/openai/codex/blob/main/docs/agents_md.md
 
 1. For Cursor and Claude-style glob consumers, keep rule files narrow and bounded.
 2. Avoid over-referencing large path sets that inflate context for glob-based agents.
@@ -72,7 +72,7 @@ Source: https://github.com/openai/codex/blob/main/AGENTS.md
 
 Source: https://github.blog/ai-and-ml/github-copilot/how-to-write-a-great-agents-md-lessons-from-over-2500-repositories/
 Source: https://agents.md/
-Source: https://github.com/openai/codex/blob/main/AGENTS.md
+Source: https://github.com/openai/codex/blob/main/docs/agents_md.md
 Source: https://github.com/vercel-labs/agent-skills/blob/main/AGENTS.md
 
 1. Author one shared policy core (same commands, boundaries, and precedence) for all agents.
@@ -86,7 +86,7 @@ Source: https://github.com/vercel-labs/agent-skills/blob/main/AGENTS.md
 ## Proactive issue discovery and remediation
 
 Source: https://github.blog/ai-and-ml/github-copilot/how-to-write-a-great-agents-md-lessons-from-over-2500-repositories/
-Source: https://github.com/openai/codex/blob/main/AGENTS.md
+Source: https://github.com/openai/codex/blob/main/docs/agents_md.md
 Source: https://github.com/vercel-labs/agent-skills/blob/main/AGENTS.md
 
 1. Run a conflict matrix review across AGENTS/aliases/CONTRIBUTING and related command/rule docs before finalizing.
@@ -118,14 +118,14 @@ Source: https://github.com/openclaw/openclaw/blob/main/CONTRIBUTING.md
 Source: https://github.com/openclaw/openclaw/blob/main/AGENTS.md
 Source: https://github.com/openclaw/openclaw/blob/main/CONTRIBUTING.md
 Source: https://github.com/openclaw/openclaw/blob/main/VISION.md
-Source: https://github.com/openai/codex/blob/main/AGENTS.md
+Source: https://github.com/openai/codex/blob/main/docs/agents_md.md
 Source: https://github.com/processing/p5.js/blob/main/AGENTS.md
 Source: https://github.com/vercel-labs/agent-skills/blob/main/AGENTS.md
 Source: https://github.com/agentsmd/agents.md/blob/main/AGENTS.md
 Source: https://github.com/rails/rails/blob/main/CONTRIBUTING.md
 Source: https://github.com/kubernetes/kubernetes/blob/master/CONTRIBUTING.md
 Source: https://github.com/atom/atom/blob/master/CONTRIBUTING.md
-Source: https://github.com/github/docs/blob/main/CONTRIBUTING.md
+Source: https://github.com/github/docs/blob/main/.github/CONTRIBUTING.md
 Source: https://github.com/facebook/react/blob/main/CONTRIBUTING.md
 
 1. OpenClaw: strong real-world alias policy and AGENTS/CONTRIBUTING/VISION cohesion.
