@@ -1,0 +1,22 @@
+{
+  "name": "go-ultimate",
+  "version": "0.15.0",
+  "description": "Opinionated Go development skill. Pi loads go-ultimate only; companion skills stay in the repo for relative links and are not registered.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Djarvur/go-ultimate.git"
+  },
+  "homepage": "https://github.com/Djarvur/go-ultimate",
+  "keywords": [
+    "pi-package",
+    "skills",
+    "go",
+    "golang"
+  ],
+  "pi": {
+    "skills": [
+      "./skills/go-ultimate"
+    ]
+  }
+}
