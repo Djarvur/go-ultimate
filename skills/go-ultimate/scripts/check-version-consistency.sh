@@ -9,6 +9,7 @@
 #   .grok-plugin/plugin.json            .grok-plugin/marketplace.json
 #   .plugin/plugin.json
 #   .agents/plugins/marketplace.json    .github/plugin/marketplace.json
+#   package.json                        (Pi package manifest)
 #
 # Exit codes:
 #   0  all versions agree
@@ -63,6 +64,13 @@ if [[ ! -f "$README_MD" ]]; then
 fi
 v_readme=$(awk '/Status:/ && match($0, /v[0-9]+\.[0-9]+\.[0-9]+/) {print substr($0, RSTART+1, RLENGTH-1); exit}' "$README_MD")
 record "$v_readme" "README.md"
+
+# package.json version (Pi). Absent is fine for a partial tree; present must match.
+PKG_JSON="${REPO_ROOT}/package.json"
+if [[ -f "$PKG_JSON" ]]; then
+    v_pkg=$(jq -r '.version // empty' "$PKG_JSON")
+    record "$v_pkg" "package.json"
+fi
 
 # Every JSON manifest with a top-level .version (plugin manifests) or a nested
 # marketplace .plugins[].version. Scan the known harness manifest dirs/files.

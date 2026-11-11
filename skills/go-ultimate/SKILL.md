@@ -13,7 +13,7 @@ description: >
   overrides generic Go style and lint guidance on conflicts.
 user-invocable: true
 license: MIT
-compatibility: Designed for Claude Code, Codex, Cursor, Grok Build, GitHub Copilot CLI, OpenCode, and any harness that reads the Agent Skills SKILL.md format. Targets any Go project.
+compatibility: Designed for Claude Code, Codex, Cursor, Grok Build, GitHub Copilot CLI, OpenCode, Pi, and any harness that reads the Agent Skills SKILL.md format. Targets any Go project.
 metadata:
   author: Djarvur
   version: '0.15.0'
@@ -109,6 +109,7 @@ root differently; use the row matching yours:
 | GitHub Copilot CLI (plugin) | the plugin's `skills/go-ultimate/` directory. |
 | ZCode | `~/.zcode/skills/go-ultimate` (or the workspace `.zcode/skills/`); ZCode also recognizes the `.claude-plugin/` manifest. |
 | OpenCode | the directory you copied `skills/go-ultimate/` into (manual install — see README). |
+| Pi | `skills/go-ultimate/` inside the package checkout. `pi install` registers only that directory (`package.json` → `pi.skills`). `<skill-dir>` is still the directory containing this file. |
 | Any harness (manual clone) | the cloned `skills/go-ultimate/` directory. |
 
 > **The `<skill-dir>` path matters for this skill.** Unlike markdown-only skills,

@@ -2,7 +2,7 @@
 
 A single, opinionated AI agent skill for writing the best Go programs — synthesized from four general-Go skills, four agent/MCP donors (one donor contributes two documents), the Google and Uber style guides, and a repository/production-practice donor. Routes any Go task (CLI, library, backend service, MCP server, AI agent) to the right architecture, conventions, and review checklist. Highly opinionated; overrides generic Go style and lint guidance on conflicts.
 
-> **Status:** v0.15.0. Designed for Claude Code, Codex, Cursor, Grok Build, GitHub Copilot CLI, OpenCode, Hermes Agent, ZCode, and any harness that reads the Agent Skills `SKILL.md` format. MIT licensed.
+> **Status:** v0.15.0. Designed for Claude Code, Codex, Cursor, Grok Build, GitHub Copilot CLI, OpenCode, Hermes Agent, ZCode, Pi, and any harness that reads the Agent Skills `SKILL.md` format. MIT licensed.
 
 ## What's inside
 
@@ -97,6 +97,16 @@ or add the repo as a tap so the vendored skills are browsable and updatable:
 ```bash
 hermes skills tap add Djarvur/go-ultimate
 ```
+
+### Pi
+
+Pi installs the repository as a package and registers only `skills/go-ultimate`. The companion skills stay in the checkout so this skill's relative links keep working, and Pi does not register them a second time. Several already ship as their own Pi packages.
+
+```bash
+pi install git:github.com/Djarvur/go-ultimate
+```
+
+`<skill-dir>` is `skills/go-ultimate/` in the package checkout, the directory that contains `SKILL.md`.
 
 ### Manual / unsupported harness
 
